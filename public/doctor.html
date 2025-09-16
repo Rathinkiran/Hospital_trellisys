@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ABC Hospital — Doctor Dashboard</title>
+
+  <!-- Bootstrap (optional but makes it look nicer) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Your custom styles (we already added dashboard CSS earlier) -->
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-light">
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="container d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">ABC Hospital — Doctor Dashboard</h4>
+
+      <div class="profile-menu d-flex align-items-center">
+        <div class="me-3 text-white small" id="profileName">User</div>
+
+        <div class="dropdown">
+          <button class="dropbtn btn btn-sm btn-light">⚙️</button>
+          <div class="dropdown-content">
+            <a href="#" id="editProfile">Edit Profile</a>
+            <a href="#" id="signoutBtn">Sign Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="container-fluid">
+    <div class="row">
+
+      <!-- Sidebar -->
+      <aside class="col-md-2 sidebar p-3">
+        <ul class="nav flex-column">
+          <li class="nav-item"><a class="nav-link" href="#doctorsSection">Doctors</a></li>
+          <li class="nav-item"><a class="nav-link" href="#patientsSection">Patients</a></li>
+          <li class="nav-item"><a class="nav-link" href="#appointmentsSection">Appointments</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main content -->
+      <main class="col-md-10 content p-4">
+
+        <!-- Doctors (read + edit only for doctor role per backend) -->
+        <section id="doctorsSection" class="mb-5">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5>Doctors</h5>
+            <small class="text-muted">You can view and edit doctor info (delete is admin-only).</small>
+          </div>
+
+          <table class="table table-striped mt-3" id="doctorTable">
+            <thead>
+              <tr><th>ID</th><th>Name</th><th>Expertise</th><th>Gender</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <!-- rows will be filled by JS when we wire AJAX -->
+              <tr><td colspan="5" class="text-muted">No data (layout only)</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Patients (doctor can add / edit / delete patients) -->
+        <section id="patientsSection" class="mb-5">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5>Patients</h5>
+            <small class="text-muted">Add new patients or manage existing ones.</small>
+          </div>
+
+          <form id="addPatientForm" class="row g-2 mt-3 mb-3">
+            <div class="col-md-4">
+              <input type="text" id="patName" class="form-control" placeholder="Patient Name" required>
+            </div>
+            <div class="col-md-3">
+              <select id="patGender" class="form-select" required>
+                <option value="">Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <input type="text" id="patProblem" class="form-control" placeholder="Problem (short)" required>
+            </div>
+            <div class="col-md-1">
+              <button type="button" id="addPatientBtn" class="btn btn-success w-100">Add</button>
+            </div>
+          </form>
+
+          <table class="table table-hover" id="patientTable">
+            <thead>
+              <tr><th>ID</th><th>Name</th><th>Problem</th><th>Gender</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5" class="text-muted">No data (layout only)</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Appointments -->
+        <section id="appointmentsSection">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5>Appointments</h5>
+            <small class="text-muted">View appointments for doctors.</small>
+          </div>
+
+          <table class="table table-bordered mt-3" id="appointmentTable">
+            <thead>
+              <tr><th>ID</th><th>Doctor</th><th>Patient</th><th>Date</th><th>Start</th><th>End</th></tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="6" class="text-muted">No data (layout only)</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- jQuery + Bootstrap JS (for dropdown + future wiring) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Small inline script to show name & signout (layout helper) -->
+  <script>
+    (function () {
+      function parseJwt(token) {
+        try {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          return JSON.parse(decodeURIComponent(atob(base64).split('').map(function(c){
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join('')));
+        } catch (e) { return null; }
+      }
+
+      // token might be stored under different keys depending on which auth.js you used
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('jwt_token');
+      if (token) {
+        const decoded = parseJwt(token);
+        const email = decoded?.user?.email || decoded?.user?.id || 'User';
+        $('#profileName').text(email);
+      }
+
+      // Sign out: clear tokens and go back to login
+      $('#signoutBtn').on('click', function(e){
+        e.preventDefault();
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('jwt_token');
+        window.location.href = 'index.html';
+      });
+
+      // Edit profile placeholder
+      $('#editProfile').on('click', function(e){
+        e.preventDefault();
+        alert('Edit profile flow (UI placeholder) — will wire with backend next step.');
+      });
+    })();
+  </script>
+
+  <!-- doctor-specific JS (we will wire AJAX later) -->
+  <!-- Create file: public/assets/js/doctor.js when you want AJAX logic -->
+  <!-- <script src="assets/js/doctor.js"></script> -->
+
+</body>
+</html>

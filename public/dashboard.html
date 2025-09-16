@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABC Hospital - Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/utils.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>ABC Hospital</h2>
+                <div id="userWelcome">Welcome, User</div>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" data-section="dashboard">Dashboard</li>
+                <li data-section="doctors" id="doctorsMenu">Doctors</li>
+                <li data-section="patients" id="patientsMenu">Patients</li>
+                <li data-section="appointments" id="appointmentsMenu">Appointments</li>
+                <li data-section="addDoctor" id="addDoctorMenu" class="hidden">Add Doctor</li>
+                <li data-section="addPatient" id="addPatientMenu" class="hidden">Add Patient</li>
+                <li data-section="bookAppointment" id="bookAppointmentMenu" class="hidden">Book Appointment</li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <div class="dashboard-header">
+                <h1>Dashboard</h1>
+                <div class="profile-menu">
+                    <div class="profile-icon" id="profileIcon">U</div>
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <a href="#" id="editProfileLink">Edit Profile</a>
+                        <a href="#" id="logoutLink">Sign Out</a>
+                    </div>
+                </div>
+            </div>
+
+           <div id="dashboardSection" class="section">
+    <div class="card">
+        <h2>Welcome to ABC Hospital Management System</h2>
+        <p>Use the menu on the left to navigate through the system.</p>
+        <div id="userRoleInfo"></div>
+    </div>
+
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon doctors">
+                <i>👨‍⚕️</i>
+            </div>
+            <div class="stat-content">
+                <h3>Total Doctors</h3>
+                <div class="stat-number" id="doctorsCount">0</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon patients">
+                <i>👥</i>
+            </div>
+            <div class="stat-content">
+                <h3>Total Patients</h3>
+                <div class="stat-number" id="patientsCount">0</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon appointments">
+                <i>📅</i>
+            </div>
+            <div class="stat-content">
+                <h3>Total Appointments</h3>
+                <div class="stat-number" id="appointmentsCount">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- <div class="card">
+        <h3>Recent Activity</h3>
+        <div id="recentActivity">
+            <p>Loading recent activity...</p>
+        </div>
+    </div> -->
+</div>
+
+            <div id="doctorsSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Doctors List</h2>
+                        <button class="btn-primary" id="addDoctorBtn">Add Doctor</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" id="doctorsTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Gender</th>
+                                    <th>Expertise</th>
+                                    <th>Email</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Doctors data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="patientsSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Patients List</h2>
+                        <button class="btn-primary" id="addPatientBtn">Add Patient</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" id="patientsTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Gender</th>
+                                    <th>Problem</th>
+                                    <th>Email</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Patients data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="appointmentsSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Appointments List</h2>
+                        <button class="btn-primary" id="bookAppointmentBtn">Book Appointment</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" id="appointmentsTable">
+                            <thead>
+                                <tr>
+                                    <th>Doctor</th>
+                                    <th>Patient</th>
+                                    <th>Date</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Appointments data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="addDoctorSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Add New Doctor</h2>
+                    </div>
+                    <form id="addDoctorForm">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="doctorName">Name:</label>
+                                    <input type="text" id="doctorName" name="name" required>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="doctorGender">Gender:</label>
+                                    <select id="doctorGender" name="gender" required>
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="doctorExpertise">Expertise:</label>
+                                    <input type="text" id="doctorExpertise" name="expertise" required>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="doctorEmail">Email:</label>
+                                    <input type="email" id="doctorEmail" name="email" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="doctorPassword">Password:</label>
+                                    <input type="password" id="doctorPassword" name="password" required>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Doctor</button>
+                        <button type="button" class="btn-secondary" id="cancelAddDoctor">Cancel</button>
+                    </form>
+                    <div id="addDoctorMessage" class="message"></div>
+                </div>
+            </div>
+
+            <div id="addPatientSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Add New Patient</h2>
+                    </div>
+                    <form id="addPatientForm">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="patientName">Name:</label>
+                                    <input type="text" id="patientName" name="name" required>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="patientGender">Gender:</label>
+                                    <select id="patientGender" name="gender" required>
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="patientProblem">Problem:</label>
+                                    <input type="text" id="patientProblem" name="problem" required>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="patientEmail">Email:</label>
+                                    <input type="email" id="patientEmail" name="email" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="patientPassword">Password:</label>
+                                    <input type="password" id="patientPassword" name="password" required>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Patient</button>
+                        <button type="button" class="btn-secondary" id="cancelAddPatient">Cancel</button>
+                    </form>
+                    <div id="addPatientMessage" class="message"></div>
+                </div>
+            </div>
+
+            <div id="bookAppointmentSection" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Book Appointment</h2>
+                    </div>
+                    <form id="bookAppointmentForm">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="appointmentDepartment">Department:</label>
+                                    <select id="appointmentDepartment" name="department">
+                                        <option value="">Select Department</option>
+                                        <option value="Cardiology">Cardiology</option>
+                                        <option value="Neurology">Neurology</option>
+                                        <option value="Orthopedics">Orthopedics</option>
+                                        <option value="Pediatrics">Pediatrics</option>
+                                        <option value="Surgery">Surgery</option>
+                                        <option value="ENT">ENT</option>
+                                        <option value="Dermatology">Dermatology</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="appointmentDoctor">Doctor:</label>
+                                    <select id="appointmentDoctor" name="doctorId" required>
+                                        <option value="">Select Doctor</option>
+                                        <!-- Doctors will be loaded here -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="appointmentDate">Date:</label>
+                                    <input type="date" id="appointmentDate" name="appointment_date" required>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="appointmentTime">Start Time:</label>
+                                    <input type="time" id="appointmentTime" name="appointment_startTime" required>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Book Appointment</button>
+                        <button type="button" class="btn-secondary" id="cancelBookAppointment">Cancel</button>
+                    </form>
+                    <div id="bookAppointmentMessage" class="message"></div>
+                </div>
+            </div>
+
+            <!-- Edit Profile Modal -->
+            <div class="modal" id="editProfileModal">
+                <div class="modal-content">
+                    <span class="modal-close" id="closeEditProfile">&times;</span>
+                    <h2>Edit Profile</h2>
+                    <form id="editProfileForm">
+                        <div class="form-group">
+                            <label for="editName">Name:</label>
+                            <input type="text" id="editName" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editEmail">Email:</label>
+                            <input type="email" id="editEmail" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editGender">Gender:</label>
+                            <select id="editGender" name="gender" required>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="editExpertiseGroup">
+                            <label for="editExpertise">Expertise:</label>
+                            <input type="text" id="editExpertise" name="expertise">
+                        </div>
+                        <div class="form-group" id="editProblemGroup">
+                            <label for="editProblem">Problem:</label>
+                            <input type="text" id="editProblem" name="problem">
+                        </div>
+                        <div class="form-group">
+                            <label for="editPassword">New Password (leave blank to keep current):</label>
+                            <input type="password" id="editPassword" name="password">
+                        </div>
+                        <button type="submit" class="btn-primary">Update Profile</button>
+                    </form>
+                    <div id="editProfileMessage" class="message"></div>
+                </div>
+            </div>
+
+            <!-- Edit Doctor Modal -->
+           <!-- Edit Doctor Modal -->
+<div class="modal" id="editDoctorModal">
+    <div class="modal-content">
+        <span class="modal-close" id="closeEditDoctor">&times;</span>
+        <h2>Edit Doctor</h2>
+        <form id="editDoctorForm">
+            <input type="hidden" id="editDoctorId" name="doctorId">
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="editDoctorName">Name:</label>
+                        <input type="text" id="editDoctorName" name="name" required>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="editDoctorGender">Gender:</label>
+                        <select id="editDoctorGender" name="gender" required>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="editDoctorExpertise">Expertise:</label>
+                        <input type="text" id="editDoctorExpertise" name="expertise" required>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="editDoctorEmail">Email:</label>
+                        <input type="email" id="editDoctorEmail" name="email" required>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="editDoctorPassword">New Password (leave blank to keep current):</label>
+                        <input type="password" id="editDoctorPassword" name="password">
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">Update Doctor</button>
+        </form>
+        <div id="editDoctorMessage" class="message"></div>
+    </div>
+</div>
+
+<!-- Edit Patient Modal -->
+<div class="modal" id="editPatientModal">
+    <div class="modal-content">
+        <span class="modal-close" id="closeEditPatient">&times;</span>
+        <h2>Edit Patient</h2>
+        <form id="editPatientForm">
+            <input type="hidden" id="editPatientId" name="patientId">
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="editPatientName">Name:</label>
+                        <input type="text" id="editPatientName" name="name" required>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="editPatientGender">Gender:</label>
+                        <select id="editPatientGender" name="gender" required>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="editPatientProblem">Problem:</label>
+                        <input type="text" id="editPatientProblem" name="problem" required>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="editPatientEmail">Email:</label>
+                        <input type="email" id="editPatientEmail" name="email" required>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="editPatientPassword">New Password (leave blank to keep current):</label>
+                        <input type="password" id="editPatientPassword" name="password">
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">Update Patient</button>
+        </form>
+        <div id="editPatientMessage" class="message"></div>
+    </div>
+</div>
