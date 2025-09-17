@@ -21,12 +21,13 @@ $routes->group("api" , ["namespace" => "App\Controllers", "filter" => "Auth" ] ,
     $routes->group('', ['filter' => 'roleAdmin'], function ($routes) {
         $routes->post('add-Doctors', [AdminController::class, 'addDoctor']);
         $routes->delete('Delete-Doctor', [AdminController::class, 'deleteDoctors']);
+        $routes->post('Edit-Doctor', [AdminController::class, 'editDoctors']);
     });
 
-    // Routes for doctor + admin
+    // Routes for doctor + admin , tat sol
     $routes->group('', ['filter' => 'role_Doctor_and_Admin'], function ($routes) {
         $routes->post('add-Patients', [AdminController::class, 'addPatient']);
-        $routes->post('Edit-Doctor', [AdminController::class, 'editDoctors']);
+        
         $routes->delete('Delete-Patient', [AdminController::class, 'deletePatient']);
     });
 
