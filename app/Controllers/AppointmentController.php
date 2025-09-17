@@ -35,7 +35,7 @@ class AppointmentController extends ResourceController
 
           return $this->respond([
             "status" => true,
-            "Msgge" => "Successfully fetched all the Appointments Data",
+            "Msgge" => "Successfully fetched all the Appointments list",
             "data" => $data
           ]);
       }catch(\Exception $e)
