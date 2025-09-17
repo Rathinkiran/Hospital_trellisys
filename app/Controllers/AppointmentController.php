@@ -31,8 +31,17 @@ class AppointmentController extends ResourceController
    public function ListAppointment()
    {
       try{
-          $data = $this->appointmentModel->findAll();
+          //$data = $this->appointmentModel->findAll();
 
+          //sortBy
+          $sortBy = $this->request->getVar("sortBy") ?? "id";
+          $sortOrder = $this->request->getVar("sortOrder") ?? "ASC";
+
+          //pagination
+          $perPage = 10;
+          $page = $this->request->getVar("page") ?? 1;
+
+          $data = $this->appointmentModel->orderBy($sortBy , $sortOrder)->paginate($perPage , 'default' , $page);
           return $this->respond([
             "status" => true,
             "Msgge" => "Successfully fetched all the Appointments Data",
