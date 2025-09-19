@@ -17,7 +17,12 @@ class AppointmentModel extends Model
         "patient_id",
         "Appointment_date",
         "Appointment_startTime",
-        "Appointment_endTime"
+        "Appointment_endTime",
+        "status",
+        "rescheduled_from",
+        "reschedule_reason",
+        "updated_at",
+        "parent_id"
     ];
 
     protected bool $allowEmptyInserts = false;

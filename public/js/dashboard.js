@@ -165,6 +165,7 @@ $(document).ready(function() {
     loadAppointments();
 });
 
+
 function setupRoleBasedUI(role, userData) {
     // Show/hide menu items based on role
     if (role === '0') { // Admin
@@ -767,7 +768,10 @@ function populateAppointmentsTable(appointments) {
     });
 }
 
-function loadDoctorsForAppointment() {
+
+                                                        
+function loadDoctorsForAppointment() 
+{
     const token = localStorage.getItem('authToken');
     
     $.ajax({

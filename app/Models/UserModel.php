@@ -19,7 +19,9 @@ class UserModel extends Model
         "role",
         "gender",
         "expertise",
-        "problem"
+        "problem",
+        "created_at",
+        "updated_at",
     ];
 
     protected bool $allowEmptyInserts = false;

@@ -48,5 +48,8 @@ $routes->group("appointment" , ["namespace" => "App\Controllers" , "filter" => "
    $routes->get('List-appointments', [AppointmentController::class, 'listAppointment']);
     
     $routes->post('appointment/check-availability', [AppointmentController::class, 'checkAvailability']);
+    $routes->post('Reschedule-appointment', [AppointmentController::class, 'rescheduleAppointment']);
+    $routes->get('export-csv', [AppointmentController::class, 'ExportAppointmentsCSV']);
 });
+
 
