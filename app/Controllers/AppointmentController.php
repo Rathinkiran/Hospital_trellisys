@@ -142,9 +142,6 @@ public function ListAppointment()
 }
 
 
-
-
-
   public function BookAppointment()
    {
     try{

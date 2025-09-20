@@ -5,14 +5,18 @@ namespace App\Controllers;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\UserModel;
+use App\Models\AppointmentModel;
+use Exception;
 
 class AdminController extends ResourceController
 {
     private $userModel;
+    private $appointmentModel;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
+        $this->appointmentModel = new AppointmentModel();
     }
 
 
@@ -523,4 +527,30 @@ public function updateProfile()
     }
 }
 
+
+public function stats()
+{
+    try{
+
+
+        $doctorsCount = $this->userModel->where('role' , '1')->countAllResults();
+        $patientsCount = $this->userModel->where('role' , '2')->countAllResults();
+
+        $appointmentsCount = $this->appointmentModel->where('status' , 'booked')->countAllResults();
+
+
+         return $this->respond([
+            'doctors' => $doctorsCount,
+            'patients' => $patientsCount,
+            'appointments' => $appointmentsCount
+        ]);
+
+    }catch(\Exception $e)
+    {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage(),
+        ]);
+    }
+}
 }

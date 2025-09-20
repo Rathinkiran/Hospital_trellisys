@@ -15,6 +15,7 @@ $routes->post("login"  , "LoginController::login");
 $routes->post("register"  , "LoginController::register");
 $routes->get('api/user/(:num)', 'AdminController::getUser/$1');
 $routes->post('api/update-profile', 'AdminController::updateProfile');
+$routes->get('api/dashboard/stats' , [AdminController::class , 'stats']);
 
 $routes->group("api" , ["namespace" => "App\Controllers", "filter" => "Auth" ] , function($routes){
     // Routes for Admin

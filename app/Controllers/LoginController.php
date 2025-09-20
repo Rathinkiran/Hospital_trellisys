@@ -97,6 +97,7 @@ class LoginController extends ResourceController
      $email = $this->request->getVar('email');
 
      $user = $this->userModel->where("email" , $email)->first();
+     $password = $this->request->getVar('password');
 
 
      if(!$user)
@@ -106,6 +107,14 @@ class LoginController extends ResourceController
             "mssge" => "User does not exist"
         ]);
      }
+    
+
+    //  if ($user["password"] !== $password) {
+    //     return $this->respond([
+    //         "status" => false,
+    //         "mssge" => "Invalid email or password"
+    //     ]);
+    // }
 
      $payloadData = [
                     "iss" => "localhost",
@@ -115,7 +124,8 @@ class LoginController extends ResourceController
                     "user" => [
                         "id" => $user["id"],
                         "email" => $user["email"],
-                        "role"  => $user['role']
+                        "role"  => $user['role'],
+                        "userName" => $user['name']
                     ],
                 ];
            
@@ -126,6 +136,7 @@ class LoginController extends ResourceController
                     "mssge" => "Login Successful",
                     "token" => $token,
                     "role" => $user["role"],
+                    "userName" => $user['name']
                 ]);
 
    }
