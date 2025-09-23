@@ -57,6 +57,7 @@ class JWTAuthFilter implements FilterInterface
             $request->jwtToken = $AuthorizationStringArr[1];
             $request->userData = $decoded;
             $request->role = $decoded->user->role;
+            $request->id = $decoded->user->id;
         }catch(\Exception $e)
         {
             return Services::response()->setStatusCode(500)->setJSON([

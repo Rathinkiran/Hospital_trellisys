@@ -36,6 +36,7 @@ $routes->group("api" , ["namespace" => "App\Controllers", "filter" => "Auth" ] ,
     $routes->post('Edit-Patient', [AdminController::class, 'editPatient']);
     $routes->get('list-Doctors', [AdminController::class, 'listDoctors']);
     $routes->get('list-Patients', [AdminController::class, 'listPatients']);
+    
 
 });
 
@@ -46,7 +47,14 @@ $routes->group("appointment" , ["namespace" => "App\Controllers" , "filter" => "
     {
        $routes->post('Book-appointment', [AppointmentController::class, 'bookAppointment']);
     });
+
+    $routes->group('', ['filter' => 'role_Doctor_and_Admin'], function ($routes) {
+      $routes->put('complete-Appointment' , [AppointmentController::class , 'completeAppointment']);    
+    });
+
+    
    $routes->get('List-appointments', [AppointmentController::class, 'listAppointment']);
+   $routes->get('show-History' , [AppointmentController::class , 'showHistory']);
     
     $routes->post('appointment/check-availability', [AppointmentController::class, 'checkAvailability']);
     $routes->post('Reschedule-appointment', [AppointmentController::class, 'rescheduleAppointment']);

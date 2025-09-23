@@ -7,150 +7,44 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="js/dashboard.js" defer></script>
-<script src="js/doctor.js" defer></script>
-
 <style>
 :root {
   --primary: #2a6bc9;
   --primary-dark: #1a56b4;
   --primary-light: #e8f2ff;
-  --accent: #2bc9c9;
   --text: #2d3748;
-  --text-light: #718096;
   --white: #ffffff;
-  --gray-50: #f7fafc;
-  --gray-100: #edf2f7;
-  --gray-200: #e2e8f0;
-  --success: #38a169;
-  --error: #e53e3e;
 }
 
-/* Reset & body */
+/* Layout & Reset */
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
 body { background: var(--primary-light); color: var(--text); }
-
-/* Layout */
-.dashboard { display: flex; min-height: 100vh; }
-.sidebar {
-  width: 220px;
-  background: var(--primary);
-  color: var(--white);
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-}
-.sidebar-header {
-  padding: 20px;
-  text-align: center;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
-}
-.sidebar-header h2 { font-size: 1.5rem; margin-bottom: 5px; }
-.sidebar-header p { font-size: 0.85rem; opacity: 0.8; }
-
-.sidebar-menu { list-style: none; flex-grow: 1; }
-.sidebar-menu li {
-  padding: 15px 20px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.sidebar-menu li:hover, .sidebar-menu li.active { background: var(--primary-dark); }
-.sidebar-menu li.hidden { display: none; }
-
-.main-content { flex-grow:1; padding: 25px; background: var(--gray-50); }
-
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-.dashboard-header h1 { color: var(--primary); font-size: 2rem; }
-.profile-menu { position: relative; }
-.profile-icon {
-  width:40px; height:40px;
-  border-radius:50%;
-  background: var(--primary);
-  color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  cursor:pointer;
-  font-weight:600;
-  font-size:1rem;
-}
-.profile-dropdown {
-  display:none;
-  position:absolute;
-  right:0;
-  top:50px;
-  background:white;
-  color:var(--text);
-  border:1px solid var(--gray-200);
-  border-radius:8px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.1);
-  overflow:hidden;
-}
-.profile-dropdown a {
-  display:block;
-  padding:12px 20px;
-  text-decoration:none;
-  color:var(--text);
-  transition:0.2s;
-}
-.profile-dropdown a:hover { background: var(--gray-100); }
-
-/* Stats cards */
-.stats-container {
-  display:flex;
-  flex-wrap:wrap;
-  gap:20px;
-}
-.stat-card {
-  background: var(--white);
-  flex:1 1 250px;
-  min-width:250px;
-  padding:25px;
-  border-radius:16px;
-  box-shadow:0 15px 30px rgba(0,0,0,0.1);
-  text-align:center;
-  transition:all 0.3s ease;
-}
-.stat-card:hover {
-  transform:translateY(-5px);
-  box-shadow:0 20px 35px rgba(0,0,0,0.15);
-}
+.dashboard { display:flex; min-height:100vh; }
+.sidebar { width:220px; background:var(--primary); color:var(--white); display:flex; flex-direction:column; }
+.sidebar-header { padding:20px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.2); }
+.sidebar-menu { list-style:none; flex-grow:1; padding:0; margin:0; }
+.sidebar-menu li { padding:15px 20px; cursor:pointer; }
+.sidebar-menu li:hover, .sidebar-menu li.active { background:var(--primary-dark); }
+.sidebar-menu li.hidden { display:none; }
+.main-content { flex-grow:1; padding:25px; background:#f7fafc; }
+.dashboard-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; }
+.btn { padding:8px 15px; border:none; border-radius:5px; background:var(--primary); color:white; cursor:pointer; transition:0.2s; }
+.btn:hover { background:var(--primary-dark); }
+.stats-container { display:flex; flex-wrap:wrap; gap:20px; }
+.stat-card { background:white; flex:1 1 250px; min-width:250px; padding:25px; border-radius:16px; box-shadow:0 15px 30px rgba(0,0,0,0.1); text-align:center; }
+.stat-card:hover { transform:translateY(-5px); box-shadow:0 20px 35px rgba(0,0,0,0.15); }
 .stat-card .icon { font-size:3rem; margin-bottom:15px; }
-.stat-card h3 { margin-bottom:10px; color: var(--primary); }
-.stat-card .number { font-size:2rem; font-weight:600; color: var(--text); }
+.stat-card h3 { margin-bottom:10px; color:var(--primary); }
+.stat-card .number { font-size:2rem; font-weight:600; }
 
-/* Responsive */
-@media(max-width:768px) {
-  .dashboard { flex-direction:column; }
-  .sidebar { width:100%; display:flex; flex-direction:row; overflow-x:auto; }
-  .sidebar-header { display:none; }
-  .sidebar-menu { display:flex; flex-direction:row; flex-wrap:nowrap; }
-  .sidebar-menu li { flex:1; text-align:center; padding:15px 10px; }
-}
-
-.profile-actions .btn {
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    background: var(--primary);
-    color: white;
-    cursor: pointer;
-    font-weight: 500;
-    transition: 0.2s;
-}
-
-.profile-actions .btn:hover {
-    background: var(--primary-dark);
-}
-
+#editProfileForm { display:none; background:white; padding:20px; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,0.1); margin-bottom:20px; }
+#editProfileForm label { display:block; margin-top:10px; }
+#editProfileForm input, #editProfileForm select { width:100%; padding:8px; margin-top:5px; }
+#editProfileForm button { margin-top:15px; }
 </style>
 </head>
 <body>
+
 <div class="dashboard">
   <!-- Sidebar -->
   <div class="sidebar">
@@ -168,24 +62,58 @@ body { background: var(--primary-light); color: var(--text); }
     <a href="patient.html" class="menu-link">Patients</a>
   </li>
   
-  <li id="appointmentsMenu" class="hidden">Appointments</li>
-  <li id="bookAppointmentMenu" class="hidden">Book Appointment</li>
-  <li id="addDoctorMenu" class="hidden">Add Doctor</li>
-  <li id="addPatientMenu" class="hidden">Add Patient</li>
+  <li id="appointmentsMenu" class="hidden">
+    <a href="appointments.html" class="menu-link">Appointments</a>
+  </li>
+
+  <!-- Book appointment (direct access) -->
+  <li id="bookAppointmentMenu" class="hidden">
+    <a href="bookAppointment.html" class="menu-link">Book Appointment</a>
+  </li>
+
+  <li id="addDoctorMenu" class="hidden">
+    <a href="addDoctor.html" class="menu-link">Add Doctor</a>
+</li>
+
+  <li id="addPatientMenu" class="hidden">
+    <a href="addPatient.html" class="menu-link">Add Patient</a>
+</li>
+
+<li id="showHistory" class="hidden">
+    <a href="history.html" class="menu-link">History</a>
+</li>
+
 </ul>
 
   </div>
 
-<!-- Main content -->
-<div class="main-content">
+  <!-- Main Content -->
+  <div class="main-content">
     <div class="dashboard-header">
         <h1>Dashboard</h1>
-        <div class="profile-actions" style="display: flex; gap: 10px; align-items: center;">
+        <div class="profile-actions" style="display:flex; gap:10px; align-items:center;">
             <button id="editProfileBtn" class="btn">Edit Profile</button>
             <button id="logoutBtn" class="btn">Sign Out</button>
         </div>
     </div>
 
+    <!-- Edit Profile Form -->
+    <form id="editProfileForm">
+      <h2>Edit Profile</h2>
+      <label>Name</label><input type="text" id="editName" required>
+      <label>Email</label><input type="email" id="editEmail" required>
+      <label>Gender</label>
+      <select id="editGender" required>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+      <label>Password (leave blank to keep)</label><input type="password" id="editPassword">
+      <div id="roleSpecificField"></div>
+      <button type="submit" class="btn">Save</button>
+      <button type="button" id="cancelEditProfile" class="btn" style="background:#e53e3e;">Cancel</button>
+    </form>
+
+    <!-- Dashboard Stats -->
     <div id="dashboardSection" class="section">
       <div class="stats-container">
         <div class="stat-card">
@@ -205,51 +133,17 @@ body { background: var(--primary-light); color: var(--text); }
         </div>
       </div>
     </div>
+
+    <!-- Placeholder sections for role-based navigation -->
+    <div id="doctorsSection" class="section" style="display:none;">Doctors Section</div>
+    <div id="patientsSection" class="section" style="display:none;">Patients Section</div>
+    <div id="appointmentsSection" class="section" style="display:none;">Appointments Section</div>
+    <div id="bookAppointmentSection" class="section" style="display:none;">Book Appointment Section</div>
+    <div id="addDoctorSection" class="section" style="display:none;">Add Doctor Section</div>
+    <div id="addPatientSection" class="section" style="display:none;">Add Patient Section</div>
   </div>
 </div>
 
-<script>
-$(document).ready(function(){
-  // Profile dropdown toggle
-  $("#profileIcon").click(function(){
-    $("#profileDropdown").toggle();
-  });
-  $(document).click(function(e){
-    if(!$(e.target).closest('#profileIcon, #profileDropdown').length){
-      $("#profileDropdown").hide();
-    }
-  });
-
-  // Sidebar menu click (just highlight)
-  $(".sidebar-menu li").click(function(){
-    $(".sidebar-menu li").removeClass("active");
-    $(this).addClass("active");
-    // TODO: Load corresponding section later
-  });
-
-  // Role-based menu visibility
-  const role = localStorage.getItem("role") || "2"; // 0-admin,1-doctor,2-patient
-  if(role==="0"){ // Admin
-    $("#addDoctorMenu, #addPatientMenu").show();
-  } else if(role==="1"){ // Doctor
-    $("#bookAppointmentMenu").show();
-  }
-  
-  const userName = localStorage.getItem("userName") || "User";
-  $("#userWelcome").text(`Welcome, ${userName}`);
-  $(".profile-icon").text(userName.charAt(0).toUpperCase());
-
-//   // Placeholder stats
-//   $("#doctorsCount").text("15");
-//   $("#patientsCount").text("120");
-//   $("#appointmentsCount").text("75");
-
-  // Logout
-  $("#logoutLink").click(function(){
-    localStorage.clear();
-    window.location.href = "index.html";
-  });
-});
-</script>
+<script src="js/dashboard.js"></script>
 </body>
 </html>
