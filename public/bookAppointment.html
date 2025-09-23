@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Appointment</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: #f7fafc; color: #2d3748; margin:0; padding:0; }
+    .container { max-width: 600px; margin: 50px auto; background: white; padding:30px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.1); }
+    h2 { text-align:center; margin-bottom:20px; color:#2a6bc9; }
+    label { font-weight:500; margin-top:15px; display:block; }
+    select, input, button { width:100%; padding:10px; margin-top:8px; border:1px solid #ccc; border-radius:8px; font-size:15px; }
+    button { background:#2a6bc9; color:white; border:none; margin-top:20px; cursor:pointer; transition:0.2s; }
+    button:hover { background:#1a56b4; }
+    .message { margin-top:15px; font-weight:600; text-align:center; }
+    .error { color:#e53e3e; }
+    .success { color:#2f855a; }
+    .back-btn { background:#718096; margin-top:10px; }
+    .back-btn:hover { background:#4a5568; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Book Appointment</h2>
+    <form id="bookForm">
+      <label>Department</label>
+      <select id="departmentSelect" required>
+        <option value="all">All Doctors</option>
+        <option value="Surgeon">Surgeon</option>
+        <option value="Cardiologist">Cardiologist</option>
+        <option value="ENT">ENT</option>
+        <option value="Dermatologist">Dermatologist</option>
+      </select>
+
+      <label>Doctor</label>
+      <select id="doctorSelect" required>
+        <option value="">-- Select Doctor --</option>
+      </select>
+
+      <label>Date</label>
+      <input type="date" id="appointmentDate" required>
+
+      <label>Time</label>
+      <input type="time" id="appointmentTime" required>
+
+      <button type="submit">Book Appointment</button>
+      <button type="button" class="back-btn" id="backBtn">⬅ Back to Dashboard</button>
+    </form>
+
+    <div class="message" id="responseMessage"></div>
+  </div>
+
+  <!-- jQuery must come BEFORE your JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="bookAppointment.js"></script>
+</body>
+</html>

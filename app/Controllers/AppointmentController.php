@@ -35,7 +35,14 @@ class AppointmentController extends ResourceController
 public function ListAppointment()
 {
     try {
+
+        $userRole = $this->request->role;
+        $userId = $this->request->id;
+        // print_r($userId);
+        // die;
+        
         //filters
+        $appointmentId = $this->request->getVar("appointmentId");
         $doctorName = $this->request->getVar("doctorName");
         $patientName = $this->request->getVar("patientName");
         $doctorId    = $this->request->getVar("doctorId");
@@ -43,6 +50,7 @@ public function ListAppointment()
         $status      = $this->request->getVar("status");
         $date        = $this->request->getVar("date"); // YYYY-MM-DD
         $dateFilter  = $this->request->getVar("dateFilter"); // today, this_week, last_month
+        
 
         // base builder with joins
         $builder = $this->appointmentModel
@@ -51,6 +59,29 @@ public function ListAppointment()
                       patient.name as PatientName")
             ->join("users as doctor", "doctor.id = appointments.doctor_id", "left")
             ->join("users as patient", "patient.id = appointments.patient_id", "left");
+
+            //user-based filtering
+            if ($userRole == 2) { // Patient
+            $builder->groupStart()
+                        ->where("appointments.patient_id", $userId)
+                        ->orWhere("appointments.parent_id IN (SELECT id FROM appointments WHERE patient_id={$userId})")//fetching child
+                    ->groupEnd();
+        } elseif ($userRole == 1) { // Doctor
+            $builder->groupStart()
+                        ->where("appointments.doctor_id" , $userId)
+                        ->orWhere("appointments.parent_id IN (SELECT id FROM appointments WHERE doctor_id = {$userId})")
+                    ->groupEnd();
+        }
+
+        // search based on apppointmentID
+        if(!empty($appointmentId))
+        {
+            $builder->groupStart()
+                ->where("appointments.id", $appointmentId)
+                ->orWhere("appointments.parent_id", $appointmentId)
+            ->groupEnd();
+        }
+
 
         // doctor filters
         if (!empty($doctorName)) {
@@ -106,7 +137,7 @@ public function ListAppointment()
         $sortOrder = $this->request->getVar("sortOrder") ?? "ASC";
 
         //pagination
-        $perPage = 10;
+        $perPage = 30;
         $page    = $this->request->getVar("page") ?? 1;
 
         $data  = $builder->orderBy($sortBy, $sortOrder)->paginate($perPage, 'default', $page);
@@ -142,6 +173,7 @@ public function ListAppointment()
 }
 
 
+
   public function BookAppointment()
    {
     try{
@@ -167,11 +199,12 @@ public function ListAppointment()
       }
 
       
-       $userData = $this->request->userData;
+      $userData = $this->request->userData;
 
       $user = $this->userModel->find($userData->user->id);
 
       $role = $user['role'];
+      $patientName = $user['name'];
       
       $patientId = $user['id'];
     
@@ -296,7 +329,9 @@ if ($conflictingAppointment) {
               "mssge"  => "Booked appointment successfully with " . $doctorName,
               "appointment" => [
                   "doctor_id" => $doctorId,
+                  "doctorName" => $doctorName,
                   "patient_id" => $patientId,
+                  "patientName" => $patientName,
                   "date"   => $appointment_date,   
                   "time" => $startTime
               ],
@@ -348,9 +383,9 @@ public function rescheduleAppointment()
 
      $role = $user['role'];
       
-     $patientId = $user['id'];
+     //$patientId = $user['id'];
 
-    $appointment_id = (int) $this->request->getVar("appointment_id");
+     $appointment_id = (int) $this->request->getVar("appointment_id");
 
     // print_r($patientId);
     // echo " ";
@@ -358,6 +393,14 @@ public function rescheduleAppointment()
     // die;
 
     $appointmentDetails = $this->appointmentModel->where("id" , $appointment_id)->first();
+
+    if($appointmentDetails['status'] == 'rescheduled')
+    {
+        return $this->respond([
+            "status" => false,
+            "Mssge" => "Cannot reschedule as the appointmemt is already rescheduled , so check the updated appointment"
+        ]);
+    }
 
     // print_r($appointmentDetails);
     // die;
@@ -375,6 +418,7 @@ public function rescheduleAppointment()
     $appointment_startTime = convertToDatabaseTime($newAppointmentstartTime); // HH:MM:SS format
     $appointment_endTime = addHoursToTime($appointment_startTime);       
     $doctor_id = $appointmentDetails["doctor_id"];
+    $patientId = $appointmentDetails["patient_id"];
 
     $validationResult = validateFutureAppointment($newAppointmentDate, $appointment_startTime);
 
@@ -485,86 +529,78 @@ public function rescheduleAppointment()
 }
 
 
-
 public function ExportAppointmentsCSV()
 {
     try {
-        // Filters
-        $doctorName = $this->request->getVar("doctorName");
-        $patientName = $this->request->getVar("patientName");
-        $doctorId    = $this->request->getVar("doctorId");
-        $patientId   = $this->request->getVar("patientId");
-        $status      = $this->request->getVar("status");
-        $date        = $this->request->getVar("date"); 
-        $dateFilter  = $this->request->getVar("dateFilter");
+    $appointmentId = $this->request->getVar("appointmentId");
+    $search        = $this->request->getVar("search");
+    $doctorName    = $this->request->getVar("doctorName");
+    $patientName   = $this->request->getVar("patientName");
+    $doctorId      = $this->request->getVar("doctorId");
+    $patientId     = $this->request->getVar("patientId");
+    $status        = $this->request->getVar("status");
+    $date          = $this->request->getVar("date"); 
+    $dateFilter    = $this->request->getVar("dateFilter");
 
-        // Sorting
-        $allowedSortColumns = [
-            'appointments.id', 'appointments.status', 'appointments.Appointment_date',
-            'appointments.Appointment_startTime', 'appointments.Appointment_endTime',
-            'doctor.name', 'patient.name', 'appointments.created_at', 'appointments.updated_at'
-        ];
-        $sortBy    = $this->request->getVar("sortBy") ?? "appointments.id";
-        $sortOrder = strtoupper($this->request->getVar("sortOrder") ?? "DESC");
-        $sortOrder = in_array($sortOrder, ['ASC', 'DESC']) ? $sortOrder : 'DESC';
-        $sortBy    = in_array($sortBy, $allowedSortColumns) ? $sortBy : 'appointments.id';
+    $builder = $this->appointmentModel
+        ->select("appointments.id,
+                  appointments.status,
+                  appointments.rescheduled_from,
+                  appointments.reschedule_reason,
+                  appointments.Appointment_date,
+                  appointments.Appointment_startTime,
+                  appointments.Appointment_endTime,
+                  doctor.name as DoctorName,
+                  patient.name as PatientName,
+                  appointments.created_at,
+                  appointments.updated_at")
+        ->join("users as doctor", "doctor.id = appointments.doctor_id", "left")
+        ->join("users as patient", "patient.id = appointments.patient_id", "left");
 
-        // Base builder with joins
-        $builder = $this->appointmentModel
-            ->select("appointments.id,
-                      appointments.status,
-                      appointments.rescheduled_from,
-                      appointments.reschedule_reason,
-                      appointments.Appointment_date,
-                      appointments.Appointment_startTime,
-                      appointments.Appointment_endTime,
-                      doctor.name as DoctorName,
-                      patient.name as PatientName,
-                      appointments.created_at,
-                      appointments.updated_at")
-            ->join("users as doctor", "doctor.id = appointments.doctor_id", "left")
-            ->join("users as patient", "patient.id = appointments.patient_id", "left");
+    // Appointment ID filter (reschedule history)
+    if (!empty($appointmentId)) {
+        $builder->groupStart()
+                ->where("appointments.id", $appointmentId)
+                ->orWhere("appointments.parent_id", $appointmentId)
+                ->groupEnd();
+    }
 
-        // Apply filters
-        if (!empty($doctorName)) {
-            $builder->where("doctor.name", $doctorName);
-        }
-        if (!empty($doctorId)) {
-            $builder->where("appointments.doctor_id", $doctorId);
-        }
-        if (!empty($patientName)) {
-            $builder->where("patient.name", $patientName);
-        }
-        if (!empty($patientId)) {
-            $builder->where("appointments.patient_id", $patientId);
-        }
-        if (!empty($status)) {
-            $builder->where("appointments.status", $status);
-        }
-        if (!empty($date)) {
-            $builder->where("appointments.Appointment_date", $date);
-        }
-        if (!empty($dateFilter)) {
-            $today = date('Y-m-d');
-            if ($dateFilter === 'today') {
-                $builder->where("appointments.Appointment_date", $today);
-            }
-            if ($dateFilter === 'this_week') {
-                $monday = date('Y-m-d', strtotime('monday this week'));
-                $sunday = date('Y-m-d', strtotime('sunday this week'));
-                $builder->where("appointments.Appointment_date >=", $monday);
-                $builder->where("appointments.Appointment_date <=", $sunday);
-            }
-            if ($dateFilter === 'last_month') {
-                $firstDayLastMonth = date('Y-m-01', strtotime('first day of last month'));
-                $lastDayLastMonth  = date('Y-m-t', strtotime('last month'));
-                $builder->where("appointments.Appointment_date >=", $firstDayLastMonth);
-                $builder->where("appointments.Appointment_date <=", $lastDayLastMonth);
-            }
-        }
+    // Search by doctor/patient name
+    if (!empty($search)) {
+        $builder->groupStart()
+                ->like("doctor.name", $search)
+                ->orLike("patient.name", $search)
+                ->groupEnd();
+    }
 
-        // Fetch all appointments with sorting
-        $appointments = $builder->orderBy($sortBy, $sortOrder)->findAll();
+    // Other filters
+    if (!empty($doctorName)) { $builder->where("doctor.name", $doctorName); }
+    if (!empty($doctorId))   { $builder->where("appointments.doctor_id", $doctorId); }
+    if (!empty($patientName)) { $builder->where("patient.name", $patientName); }
+    if (!empty($patientId))   { $builder->where("appointments.patient_id", $patientId); }
+    if (!empty($status))      { $builder->where("appointments.status", $status); }
+    if (!empty($date))        { $builder->where("appointments.Appointment_date", $date); }
+    if (!empty($dateFilter)) {
+        $today = date('Y-m-d');
+        if ($dateFilter === 'today') {
+            $builder->where("appointments.Appointment_date", $today);
+        }
+        if ($dateFilter === 'this_week') {
+            $monday = date('Y-m-d', strtotime('monday this week'));
+            $sunday = date('Y-m-d', strtotime('sunday this week'));
+            $builder->where("appointments.Appointment_date >=", $monday);
+            $builder->where("appointments.Appointment_date <=", $sunday);
+        }
+        if ($dateFilter === 'last_month') {
+            $firstDayLastMonth = date('Y-m-01', strtotime('first day of last month'));
+            $lastDayLastMonth  = date('Y-m-t', strtotime('last month'));
+            $builder->where("appointments.Appointment_date >=", $firstDayLastMonth);
+            $builder->where("appointments.Appointment_date <=", $lastDayLastMonth);
+        }
+    }
+
+    $appointments = $builder->orderBy('appointments.id', 'DESC')->findAll();
+
 
         // Set headers for CSV
         $filename = "appointments_export_" . date('Y-m-d_H-i-s') . ".csv";
@@ -609,7 +645,59 @@ public function ExportAppointmentsCSV()
     }
 }
 
+public function completeAppointment()
+{
+    try{
+       $appointmentId = $this->request->getVar("appointmentId");
 
-   
+       $result = $this->appointmentModel->find($appointmentId);
 
+       if(!$result || $result['status'] != "booked")
+       {
+        return $this->respond([
+            "status" => false,
+            "Mssge" => "Appointment doesn't exist or Couldn't find Appointment"
+        ]);
+       }
+
+       $this->appointmentModel
+     ->where('id', $appointmentId)
+     ->set('status', 'completed')
+     ->update();
+
+
+       return $this->respond([
+            "status" => true,
+            "Mssge" => "Successfully changed the status of appointment to completed",
+        ]);
+       
+
+    }
+    catch(\Exception $e)
+    {
+       return $this->respond([
+        "status" => false,
+        "Error" => $e->getMessage()
+       ]);
+    }
+}
+
+public function showHistory()
+{
+    try{
+       $userData = $this->request->userData;
+
+       print_r($userData);
+       die;
+
+
+    }
+    catch(\Exception $e)
+    {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage()
+        ]);
+    }
+}
 }

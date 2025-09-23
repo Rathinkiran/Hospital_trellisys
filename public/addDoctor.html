@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Doctor - ABC Hospital</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+:root {
+  --primary: #2a6bc9;
+  --primary-dark: #1a56b4;
+  --primary-light: #e8f2ff;
+  --text: #2d3748;
+  --white: #ffffff;
+  --error: #e53e3e;
+}
+
+/* Layout & Reset */
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
+body { background: var(--primary-light); color: var(--text); }
+.container { max-width:600px; margin:50px auto; background:white; padding:30px; border-radius:10px; box-shadow:0 10px 25px rgba(0,0,0,0.1); }
+h1 { color: var(--primary); text-align:center; margin-bottom:20px; }
+label { display:block; margin-top:15px; font-weight:500; }
+input, select { width:100%; padding:10px; margin-top:5px; border-radius:5px; border:1px solid #ccc; }
+button { margin-top:20px; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:500; transition:0.2s; }
+button#submitBtn { background:var(--primary); color:white; }
+button#submitBtn:hover { background: var(--primary-dark); }
+button#backBtn { background:#e53e3e; color:white; margin-right:10px; }
+button#backBtn:hover { background:#c53030; }
+.error { color: var(--error); margin-top:5px; font-size:0.9rem; }
+.flex-row { display:flex; justify-content:flex-start; gap:10px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Add Doctor</h1>
+  <form id="addDoctorForm">
+    <label for="name">Name *</label>
+    <input type="text" id="name" required>
+
+    <label for="email">Email *</label>
+    <input type="email" id="email" required>
+
+    <label for="password">Password *</label>
+    <input type="password" id="password" required>
+
+    <label for="gender">Gender *</label>
+    <select id="gender" required>
+      <option value="">Select Gender</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+
+    <label for="expertise">Expertise *</label>
+    <input type="text" id="expertise" required>
+
+    <div class="flex-row">
+      <button type="button" id="backBtn">Back</button>
+      <button type="submit" id="submitBtn">Add Doctor</button>
+    </div>
+    <div id="formError" class="error"></div>
+  </form>
+</div>
+
+<script>
+$(document).ready(function(){
+    const token = localStorage.getItem("token");
+    if(!token){
+        alert("Please login first");
+        window.location.href = "index.html";
+        return;
+    }
+
+    // Back button
+    $("#backBtn").click(function(){
+        window.location.href = "http://localhost:8080/dashboard.html";
+    });
+
+    // Submit form
+    $("#addDoctorForm").on("submit", function(e){
+        e.preventDefault();
+        $("#formError").text("");
+
+        const name = $("#name").val().trim();
+        const email = $("#email").val().trim();
+        const password = $("#password").val();
+        const gender = $("#gender").val();
+        const expertise = $("#expertise").val().trim();
+
+        if(!name || !email || !password || !gender || !expertise){
+            $("#formError").text("All fields are required.");
+            return;
+        }
+
+        $.ajax({
+            url: "http://localhost:8080/api/add-Doctors",
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            data: { name, email, password, gender, expertise },
+            success: function(res){
+                if(res.status){
+                    alert(res.mssge || "Doctor added successfully!");
+                    window.location.href = "doctor.html"; // redirect to listing
+                } else {
+                    $("#formError").text(res.mssge || "Failed to add doctor");
+                }
+            },
+            error: function(xhr){
+                let msg = "Server error";
+                if(xhr.responseJSON && xhr.responseJSON.mssge){
+                    msg = xhr.responseJSON.mssge;
+                }
+                $("#formError").text(msg);
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>

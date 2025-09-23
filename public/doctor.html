@@ -1,36 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doctors - ABC Hospital</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
-
-  .sidebar-menu li a.menu-link {
-  color: inherit;
-  text-decoration: none;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-body {
-  font-family: 'Poppins', sans-serif;
-  background: #f7fafc;
-  margin: 0;
-  padding: 20px;
-}
-
-
+/* Container */
 .container {
-  max-width: 900px;   /* controls width of table */
-  margin: 0 auto;     /* centers the container */
+  max-width: 900px;
+  margin: 50px auto;
   background: #fff;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
-
+/* Header */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
+
+.flex-row { display:flex; gap:10px; }
 
 .btn-primary {
   background: #2a6bc9;
@@ -40,82 +35,91 @@ body {
   border-radius: 5px;
   cursor: pointer;
 }
+.btn-primary:hover { background: #1a56b4; }
 
-.btn-primary:hover {
-  background: #1a56b4;
+.btn-back { background:#e53e3e; color:white; }
+.btn-back:hover { background:#c53030; }
+
+/* Table */
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+.table th { background: #e8f2ff; color: #2a6bc9; }
+
+.btn-edit { background: #38a169; color: white; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
+.btn-delete { background: #e53e3e; color: white; padding: 5px 10px; border: none; border-radius: 5px; margin-left: 5px; cursor: pointer; }
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right:0; bottom:0;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
 }
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
 }
-
-.table th, .table td {
-  padding: 12px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-}
-
-.table th {
-  background: #e8f2ff;
-  color: #2a6bc9;
-}
-
-.btn-edit {
-  background: #38a169;
-  color: white;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.btn-delete {
-  background: #e53e3e;
-  color: white;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 5px;
-  margin-left: 5px;
-  cursor: pointer;
-}
-
+.modal-content label { display:block; margin-top: 10px; }
+.modal-content input, .modal-content select { width: 100%; padding: 8px; margin-top: 5px; }
+.modal-content button { margin-top: 15px; }
 </style>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Doctors - ABC Hospital</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/doctor.css"> <!-- 👈 separate CSS -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="js/doctor.js" defer></script> <!-- 👈 separate JS -->
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>Doctors List</h1>
+
+<div class="container">
+  <div class="header">
+    <h1>Doctors List</h1>
+    <div class="flex-row">
+      <button id="backBtn" class="btn-primary btn-back">Back</button>
       <button id="addDoctorBtn" class="btn-primary">Add Doctor</button>
     </div>
+  </div>
 
-    <div class="table-responsive">
-      <table id="doctorsTable" class="table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Gender</th>
-            <th>Expertise</th>
-            <th>Email</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- doctors data will be loaded here -->
-        </tbody>
-      </table>
+  <div class="table-responsive">
+    <table id="doctorsTable" class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Gender</th>
+          <th>Expertise</th>
+          <th>Email</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- doctors data will be loaded here -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <h2>Edit Doctor</h2>
+    <input type="hidden" id="editDoctorId">
+    <label>Name</label>
+    <input type="text" id="editName">
+    <label>Gender</label>
+    <select id="editGender">
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+    <label>Expertise</label>
+    <input type="text" id="editExpertise">
+    <label>Email</label>
+    <input type="email" id="editEmail">
+    <div class="flex-row">
+      <button id="saveEditBtn" class="btn-primary">Save</button>
+      <button id="cancelEditBtn" class="btn-back">Cancel</button>
     </div>
   </div>
+</div>
+
+<script src="js/doctor.js" defer></script>
 </body>
 </html>
