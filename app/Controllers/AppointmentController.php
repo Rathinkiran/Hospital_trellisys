@@ -6,6 +6,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\UserModel;
 use App\Models\AppointmentModel;
+use App\Models\VisitRecordsModel;
 use PHPUnit\TextUI\XmlConfiguration\Validator;
 helper('time_helper');
 helper('time_helper2');
@@ -15,7 +16,7 @@ helper('validateFutureAppointment_helper');
 class AppointmentController extends ResourceController
 {
    
-   private $appointmentModel, $userModel , $db;
+   private $appointmentModel, $userModel , $db , $visitRecords;
 
   //  private function convertToDatabaseTime($time12Hour)
   // {   
@@ -29,6 +30,7 @@ class AppointmentController extends ResourceController
      $this->db = db_connect();
      $this->appointmentModel = new AppointmentModel();
      $this->userModel = new UserModel();
+     $this->visitRecords = new VisitRecordsModel();
    }
 
 
@@ -50,7 +52,7 @@ public function ListAppointment()
         $status      = $this->request->getVar("status");
         $date        = $this->request->getVar("date"); // YYYY-MM-DD
         $dateFilter  = $this->request->getVar("dateFilter"); // today, this_week, last_month
-        
+
 
         // base builder with joins
         $builder = $this->appointmentModel
@@ -175,7 +177,7 @@ public function ListAppointment()
 
 
   public function BookAppointment()
-   {
+    {
     try{
       $validationRules = [
         "doctorId" => [
@@ -270,41 +272,41 @@ public function ListAppointment()
                                                               ->first();
 
 
-if ($conflictingAppointment) {
-    return $this->respond([
-        "status" => false,
-        "error" => "Doctor already has a conflicting appointment at this time slot."
-    ]);
-}                                                              
+    if ($conflictingAppointment) {
+        return $this->respond([
+            "status" => false,
+            "error" => "Doctor already has a conflicting appointment at this time slot."
+        ]);
+        }                                                              
 
 
-//          if($alreadyExistingAppointment)
-//          {
-//            foreach($alreadyExistingAppointment as $appointment)
-//            {
-//               $existingStart = $appointment['Appointment_startTime'];
-//               $existingEnd = $appointment['Appointment_endTime'];
+        //          if($alreadyExistingAppointment)
+        //          {
+        //            foreach($alreadyExistingAppointment as $appointment)
+        //            {
+        //               $existingStart = $appointment['Appointment_startTime'];
+        //               $existingEnd = $appointment['Appointment_endTime'];
 
-//         // 1. New start time is between existing start and end time
-//         // 2. New end time is between existing start and end time  
-//         // 3. New appointment completely surrounds existing appointment
-         
-//         if (
-//             ($appointment_startTime >= $existingStart && $appointment_startTime < $existingEnd) ||
-//             ($appointment_endTime > $existingStart && $appointment_endTime <= $existingEnd) ||
-//             ($appointment_startTime <= $existingStart && $appointment_endTime >= $existingEnd)
-//         ) {
-//             $hasConflict = true;
-//             break; // No need to check further if we found one conflict
-//         }
-//     }
-//   if ($hasConflict) {
-//         return $this->respond([
-//             "status" => false,
-//             "error" => "Doctor already has a conflicting appointment at this time slot. Please choose a different time."
-//         ]);
-//     }
-// }
+        //         // 1. New start time is between existing start and end time
+        //         // 2. New end time is between existing start and end time  
+        //         // 3. New appointment completely surrounds existing appointment
+                
+        //         if (
+        //             ($appointment_startTime >= $existingStart && $appointment_startTime < $existingEnd) ||
+        //             ($appointment_endTime > $existingStart && $appointment_endTime <= $existingEnd) ||
+        //             ($appointment_startTime <= $existingStart && $appointment_endTime >= $existingEnd)
+        //         ) {
+        //             $hasConflict = true;
+        //             break; // No need to check further if we found one conflict
+        //         }
+        //     }
+        //   if ($hasConflict) {
+        //         return $this->respond([
+        //             "status" => false,
+        //             "error" => "Doctor already has a conflicting appointment at this time slot. Please choose a different time."
+        //         ]);
+        //     }
+        // }
            
          
       
@@ -632,7 +634,7 @@ public function ExportAppointmentsCSV()
         $row['created_at'],
         $row['updated_at']
     ]);
-}
+ }
 
         fclose($output);
         exit; 
@@ -648,30 +650,110 @@ public function ExportAppointmentsCSV()
 public function completeAppointment()
 {
     try{
-       $appointmentId = $this->request->getVar("appointmentId");
+         $userData = $this->request->userData;
 
-       $result = $this->appointmentModel->find($appointmentId);
+         $userDetails = $this->userModel->find($userData->user->id);
+         $userRole = $userDetails['role'];
 
-       if(!$result || $result['status'] != "booked")
+         if($userRole !== '1')
+         {
+            return $this->respond([
+                "status" => false,
+                "Error_Mssge" => "Oly doctors can complete the appointment"
+            ]);
+         }
+
+
+        $validationRules = [
+            "appointment_id" => [
+                "rules" => "required",
+            ],
+            "reason" => [
+                "rules" => "required",
+            ],
+            "weight" => [
+                "rules" => "required",
+            ],
+            "bp_systolic" => [
+                "rules" => "required",
+            ],
+            "bp_diastolic" => [
+                "rules" => "required",
+            ],
+            "doctor_comment" => [
+                "rules" => "required",
+            ],
+        ];
+
+        
+        if(!$this->validate($validationRules))
+            {
+                return $this->respond([
+                    "status" => false,
+                    "Mssge" => "All fields are required",
+                    "Error" => $this->validator->getErrors(),
+                ]);
+            }
+
+     
+
+       $appointmentId = $this->request->getVar("appointment_id");
+       $reason = $this->request->getVar("reason");
+       $weight = $this->request->getVar("weight");
+       $bp_systolic = $this->request->getVar("bp_systolic");
+       $bp_diastolic = $this->request->getVar("bp_diastolic");
+       $doctor_comment = $this->request->getVar("doctor_comment");
+
+       $appointmentDetails = $this->appointmentModel->find($appointmentId);
+
+       if(!$appointmentDetails || $appointmentDetails['status'] != "booked")
        {
         return $this->respond([
             "status" => false,
-            "Mssge" => "Appointment doesn't exist or Couldn't find Appointment"
+            "Mssge" => "Appointment doesn't exist or Maybe the appointment has been rescheduled/completed"
         ]);
        }
 
-       $this->appointmentModel
-     ->where('id', $appointmentId)
-     ->set('status', 'completed')
-     ->update();
+       $patient_id = $appointmentDetails['patient_id'];
+       $doctor_id = $appointmentDetails['doctor_id'];
 
+
+       $data = [
+        "appointment_id" => $appointmentId,
+        "patient_id" => $patient_id,
+        "doctor_id" => $doctor_id,
+        "reason" => $reason,
+        "weight" => $weight,
+        "bp_systolic" => $bp_systolic,
+        "bp_diastolic" => $bp_diastolic,
+        "doctor_comment" => $doctor_comment,
+       ];
+
+       //Starting the transaction
+       $this->db->transStart();
+       $this->appointmentModel
+        ->where('id', $appointmentId)
+        ->set('status', 'completed')
+        ->update();
+
+        
+        
+       $this->visitRecords->insert($data);
+       $this->db->transComplete();
+       //Ending the transaction
+
+       if ($this->db->transStatus() === false) {
+            return $this->respond([
+                "status" => false,
+                "Mssge"  => "Transaction failed"
+            ]);
+        }
 
        return $this->respond([
             "status" => true,
-            "Mssge" => "Successfully changed the status of appointment to completed",
+            "Mssge" => "Successfully changed the status of appointment to completed and added the details into visit_records",
         ]);
        
-
     }
     catch(\Exception $e)
     {
@@ -682,14 +764,70 @@ public function completeAppointment()
     }
 }
 
+
+
 public function showHistory()
 {
     try{
        $userData = $this->request->userData;
 
-       print_r($userData);
-       die;
+       $userDetails = $this->userModel->find($userData->user->id);
 
+       $userId = $userDetails["id"];
+
+
+       //For Patient
+       $query = $this->db->table('appointments a')
+                          ->select('a.id as appointment_id , 
+                                    a.doctor_id,
+                                    a.patient_id,
+                                    u.name as doctorName,
+                                    a.status,
+                                    a.Appointment_startTime,
+                                    a.Appointment_endTime,
+                                    v.reason,
+                                    v.weight,
+                                    v.bp_systolic,
+                                    v.bp_diastolic,
+                                    v.created_at,
+                                    v.doctor_comment
+                                    ')
+                            ->where([
+                                "a.patient_id" => $userId,
+                                "a.status" => "completed"
+                            ])
+                            ->join('visit_records v' , 'v.appointment_id = a.id')
+                            ->join('users u' , 'u.id = a.doctor_id')
+                            ->orderBy('a.Appointment_date' , 'DESC')
+                            ->get()
+                            ->getResultArray();
+
+       $result = array_map(function($row) {
+        return [
+            'appointment_id'       => $row['appointment_id'],
+            'doctor_id'            => $row['doctor_id'],
+            'doctorName'           => $row['doctorName'],
+            'patient_id'           => $row['patient_id'],
+            'status'               => $row['status'],
+            'appointment_startTime'=> $row['Appointment_startTime'],
+            'appointment_endTime'  => $row['Appointment_endTime'],
+            'visit_records' => [
+                'date'          => $row['created_at'],
+                'reason'        => $row['reason'],
+                'weight'        => $row['weight'],
+                'bp_systolic'   => $row['bp_systolic'],
+                'bp_diastolic'  => $row['bp_diastolic'],
+                'doctor_comment'=> $row['doctor_comment'],
+            ]
+        ];
+        }, $query);
+
+ 
+    return $this->respond([
+        "status" => true,
+        "Mssge" => "Fetched successfully",
+        "data" => $result,
+    ]);
 
     }
     catch(\Exception $e)
@@ -700,4 +838,33 @@ public function showHistory()
         ]);
     }
 }
+
+public function getPatientStats()
+{
+    try {
+        $userData = $this->request->userData;
+        $patientId = $userData->user->id;
+
+        // Fetch weight & BP history for this patient
+        $stats = $this->db->table('visit_records v')
+                          ->select('v.created_at as date, v.weight, v.bp_systolic, v.bp_diastolic')
+                          ->where('v.patient_id', $patientId)
+                          ->where('v.isDeleted', 0)
+                          ->orderBy('v.created_at', 'ASC')
+                          ->get()
+                          ->getResultArray();
+
+        return $this->respond([
+            "status" => true,
+            "Mssge" => "Fetched patient stats successfully",
+            "data" => $stats
+        ]);
+    } catch (\Exception $e) {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage()
+        ]);
+    }
+}
+
 }

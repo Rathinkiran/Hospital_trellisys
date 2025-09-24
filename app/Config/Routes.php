@@ -55,6 +55,8 @@ $routes->group("appointment" , ["namespace" => "App\Controllers" , "filter" => "
     
    $routes->get('List-appointments', [AppointmentController::class, 'listAppointment']);
    $routes->get('show-History' , [AppointmentController::class , 'showHistory']);
+   $routes->get('getDetailsforPatient' , [AdminController::class , 'getDetailsforPatient']);
+   $routes->get('getPatientStats' , [AppointmentController::class , 'getPatientStats']);
     
     $routes->post('appointment/check-availability', [AppointmentController::class, 'checkAvailability']);
     $routes->post('Reschedule-appointment', [AppointmentController::class, 'rescheduleAppointment']);

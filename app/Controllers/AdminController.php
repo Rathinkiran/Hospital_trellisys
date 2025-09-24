@@ -553,4 +553,35 @@ public function stats()
         ]);
     }
 }
+
+public function getDetailsforPatient()
+{
+    try{
+       $userData = $this->request->userData;
+       $id = $userData->user->id;
+
+       $userDetails = $this->userModel->find($id);
+
+       $data = [
+        "name" => $userDetails['name'],
+        "gender" => $userDetails['gender'],
+        "DOB" => "12-08-2003",
+        "email" => $userDetails['email'],
+        "photo" => "/assets/images/dummyProfile.png"
+       ];
+
+       return $this->respond([
+        "status" => true,
+        "Mssge" => "Successfully fetched Basic Details",
+        "data" => $data,
+       ]);
+    }
+    catch(\Exception $e)
+    {
+       return $this->respond([
+        "status" => false,
+        "Error" => $e->getMessage()
+       ]);
+    }
+}
 }
