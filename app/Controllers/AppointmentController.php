@@ -543,6 +543,7 @@ public function ExportAppointmentsCSV()
     $status        = $this->request->getVar("status");
     $date          = $this->request->getVar("date"); 
     $dateFilter    = $this->request->getVar("dateFilter");
+    
 
     $builder = $this->appointmentModel
         ->select("appointments.id,
@@ -647,6 +648,7 @@ public function ExportAppointmentsCSV()
     }
 }
 
+
 public function completeAppointment()
 {
     try{
@@ -703,16 +705,21 @@ public function completeAppointment()
        $bp_systolic = $this->request->getVar("bp_systolic");
        $bp_diastolic = $this->request->getVar("bp_diastolic");
        $doctor_comment = $this->request->getVar("doctor_comment");
+    
 
        $appointmentDetails = $this->appointmentModel->find($appointmentId);
+    //       print_r($appointmentDetails);
+    // die;
 
-       if(!$appointmentDetails || $appointmentDetails['status'] != "booked")
-       {
-        return $this->respond([
-            "status" => false,
-            "Mssge" => "Appointment doesn't exist or Maybe the appointment has been rescheduled/completed"
-        ]);
-       }
+
+
+        if(!$appointmentDetails || !isset($appointmentDetails['status']) || $appointmentDetails['status'] != "booked") {
+            return $this->respond([
+                "status" => false,
+                "Mssge" => "Appointment doesn't exist or maybe it has already been completed/rescheduled",
+            ]);
+        }
+
 
        $patient_id = $appointmentDetails['patient_id'];
        $doctor_id = $appointmentDetails['doctor_id'];
@@ -783,6 +790,7 @@ public function showHistory()
                                     a.patient_id,
                                     u.name as doctorName,
                                     a.status,
+                                    a.Appointment_date,
                                     a.Appointment_startTime,
                                     a.Appointment_endTime,
                                     v.reason,
@@ -809,6 +817,7 @@ public function showHistory()
             'doctorName'           => $row['doctorName'],
             'patient_id'           => $row['patient_id'],
             'status'               => $row['status'],
+            'appointment_date'     => $row['Appointment_date'],
             'appointment_startTime'=> $row['Appointment_startTime'],
             'appointment_endTime'  => $row['Appointment_endTime'],
             'visit_records' => [

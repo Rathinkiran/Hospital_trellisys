@@ -17,11 +17,88 @@ $(document).ready(function () {
 
     if (role === "0") { // Admin
         $("#addDoctorMenu, #addPatientMenu, #doctorsMenu, #patientsMenu, #appointmentsMenu,#bookAppointmentMenu").removeClass("hidden");
+        $("#dashboardSection").show();
     } else if (role === "1") { // Doctor
         $("#patientsMenu, #appointmentsMenu, #showHistory").removeClass("hidden");
+        $("#dashboardSection").show();
     } else if (role === "2") { // Patient
-        $("#bookAppointmentMenu, #appointmentsMenu, #showHistory").removeClass("hidden");
-    }
+    $("#bookAppointmentMenu, #appointmentsMenu, #showHistory").removeClass("hidden");
+    $("#dashboardSection").hide();  // Hide admin stats
+    $("#patientDashboardSection").show();
+
+    // Fetch patient details
+    $.ajax({
+        url: "http://localhost:8080/appointment/getDetailsforPatient",
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+        success: function(res) {
+            if (res.status) {
+                $("#pName").text(res.data.name);
+                $("#pEmail").text(res.data.email);
+                $("#pGender").text(res.data.gender);
+                $("#pDOB").text(res.data.DOB);
+                $("#pPhoto").attr("src", res.data.photo);
+            }
+        }
+    });
+
+    // Fetch patient stats
+    $.ajax({
+        url: "http://localhost:8080/appointment/getPatientStats",
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+        success: function(res) {
+            if (res.status) {
+                const labels = res.data.map(d => d.date);
+                const weights = res.data.map(d => d.weight);
+                const systolic = res.data.map(d => d.bp_systolic);
+                const diastolic = res.data.map(d => d.bp_diastolic);
+
+                // Weight Chart
+                new Chart(document.getElementById("weightChart"), {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: "Weight (kg)",
+                            data: weights,
+                            borderColor: "#2a6bc9",
+                            backgroundColor: "rgba(42,107,201,0.2)",
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    }
+                });
+
+                // BP Chart
+                new Chart(document.getElementById("bpChart"), {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: "Systolic",
+                                data: systolic,
+                                borderColor: "#e53e3e",
+                                backgroundColor: "rgba(229,62,62,0.2)",
+                                fill: true,
+                                tension: 0.3
+                            },
+                            {
+                                label: "Diastolic",
+                                data: diastolic,
+                                borderColor: "#38a169",
+                                backgroundColor: "rgba(56,161,105,0.2)",
+                                fill: true,
+                                tension: 0.3
+                            }
+                        ]
+                    }
+                });
+            }
+        }
+    });
+}
 
     // ---------- FETCH STATS ----------
     $.ajax({

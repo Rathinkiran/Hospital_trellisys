@@ -41,7 +41,7 @@ function loadAppointments() {
     headers: { Authorization: `Bearer ${token}` },
     success: function (res) {
       const tbody = $("#appointmentsTable tbody");
-      tbody.empty();
+      tbody.empty();  
       const appts = res.data || [];
       if (appts.length > 0) {
         appts.forEach(a => {
@@ -50,31 +50,38 @@ function loadAppointments() {
           const end12   = formatSqlTimeTo12(a.Appointment_endTime);
           const startInput = sqlTimeToHtmlTime(a.Appointment_startTime); // for prefill
 
-          let actionButtons = "";
-          if ((a.status || "").toLowerCase() === "completed") {
-              actionButtons = `<span class="completed-label">Completed</span>`;
-          } else {
-              actionButtons = `
-                <button class="btn-complete" data-id="${a.id}">Complete</button>
-                <button class="btn-reschedule"
-                        data-id="${a.id}"
-                        data-date="${a.Appointment_date}"
-                        data-time="${startInput}">Reschedule</button>
-              `;
-          }
+// Safely get status
+const statusValue = (a.status ?? "").toLowerCase(); // fallback to empty string if undefined
 
-          tbody.append(`
-            <tr>
-              <td>${a.id}</td>
-              <td>${escapeHtml(a.DoctorName || '')}</td>
-              <td>${escapeHtml(a.PatientName || '')}</td>
-              <td>${a.Appointment_date || ''}</td>
-              <td>${start12}</td>
-              <td>${end12}</td>
-              <td><span class="status ${(a.status||'').toLowerCase()}">${a.status}</span></td>
-              <td class="actions">${actionButtons}</td>
-            </tr>
-          `);
+let actionButtons = "";
+if (statusValue === "completed") {
+    actionButtons = `<span class="completed-label">Completed</span>`;
+} else {
+    actionButtons = `
+      <button class="btn-complete" data-id="${a.id}">Complete</button>
+      <button class="btn-reschedule"
+              data-id="${a.id}"
+              data-date="${a.Appointment_date}"
+              data-time="${startInput}">Reschedule</button>
+    `;
+}
+
+// Update status cell safely
+const statusText = a.status || "Unknown";
+
+tbody.append(`
+  <tr>
+    <td>${a.id}</td>
+    <td>${escapeHtml(a.DoctorName || '')}</td>
+    <td>${escapeHtml(a.PatientName || '')}</td>
+    <td>${a.Appointment_date || ''}</td>
+    <td>${start12}</td>
+    <td>${end12}</td>
+    <td><span class="status ${statusValue}">${statusText}</span></td>
+    <td class="actions">${actionButtons}</td>
+  </tr>
+`);
+
         });
       } else {
         tbody.append(`<tr><td colspan="8" style="text-align:center;">No appointments found</td></tr>`);
@@ -107,25 +114,11 @@ $("#searchBox, #filterDate, #filterStatus, #filterRange, #filterAppointmentId").
   loadAppointments();
 
   // ---------- COMPLETE APPOINTMENT ----------
-  $(document).on("click", ".btn-complete", function () {
+$(document).on("click", ".btn-complete", function () {
     const id = $(this).data("id");
     if (!id) { alert("Missing appointment id"); return; }
-    if (confirm("Mark this appointment as completed?")) {
-      $.ajax({
-        url: `http://localhost:8080/appointment/complete-Appointment?appointmentId=${id}`,
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-        success: function () {
-          alert("Appointment marked as completed.");
-          loadAppointments();
-        },
-        error: function (xhr) {
-          alert("Failed to complete appointment.");
-          console.error(xhr);
-        }
-      });
-    }
-  });
+    window.location.href = `completeAppointment.html?appointmentId=${id}`;
+});
 
   // ---------- OPEN RESCHEDULE MODAL ----------
   // now reads data-* attributes (id, date, time) from the table button

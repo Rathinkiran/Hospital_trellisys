@@ -6,6 +6,7 @@
 <title>ABC Hospital - Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
 :root {
@@ -113,8 +114,47 @@ body { background: var(--primary-light); color: var(--text); }
       <button type="button" id="cancelEditProfile" class="btn" style="background:#e53e3e;">Cancel</button>
     </form>
 
+
+    <!-- Dashboard Stats for Patient -->
+<div id="patientDashboardSection" class="section" style="display:none;">
+  <!-- Basic Info -->
+  <div id="patientInfo" style="background:white; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 8px 20px rgba(0,0,0,0.1);">
+    <h2>My Details</h2>
+    <p><strong>Name:</strong> <span id="pName"></span></p>
+    <p><strong>Email:</strong> <span id="pEmail"></span></p>
+    <p><strong>Gender:</strong> <span id="pGender"></span></p>
+    <p><strong>DOB:</strong> <span id="pDOB"></span></p>
+    <img id="pPhoto" src="" alt="Profile" style="width:100px; border-radius:50%; margin-top:10px;">
+  </div>
+
+  <!-- Graphs -->
+<div style="display:flex; flex-direction:column; gap:15px; max-width:600px; margin:auto;">
+  <div style="background:white; padding:15px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
+    <h3 style="margin-bottom:10px;">Weight Trend</h3>
+    <canvas id="weightChart" style="height:200px;"></canvas>
+  </div>
+  <div style="background:white; padding:15px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
+    <h3 style="margin-bottom:10px;">Blood Pressure Trend</h3>
+    <canvas id="bpChart" style="height:200px;"></canvas>
+  </div>
+</div>
+
+
+
     <!-- Dashboard Stats -->
-    <div id="dashboardSection" class="section">
+    
+
+    <!-- Placeholder sections for role-based navigation -->
+    <div id="doctorsSection" class="section" style="display:none;">Doctors Section</div>
+    <div id="patientsSection" class="section" style="display:none;">Patients Section</div>
+    <div id="appointmentsSection" class="section" style="display:none;">Appointments Section</div>
+    <div id="bookAppointmentSection" class="section" style="display:none;">Book Appointment Section</div>
+    <div id="addDoctorSection" class="section" style="display:none;">Add Doctor Section</div>
+    <div id="addPatientSection" class="section" style="display:none;">Add Patient Section</div>
+  </div>
+
+
+  <div id="dashboardSection" class="section">
       <div class="stats-container">
         <div class="stat-card">
           <div class="icon">👨‍⚕️</div>
@@ -133,15 +173,6 @@ body { background: var(--primary-light); color: var(--text); }
         </div>
       </div>
     </div>
-
-    <!-- Placeholder sections for role-based navigation -->
-    <div id="doctorsSection" class="section" style="display:none;">Doctors Section</div>
-    <div id="patientsSection" class="section" style="display:none;">Patients Section</div>
-    <div id="appointmentsSection" class="section" style="display:none;">Appointments Section</div>
-    <div id="bookAppointmentSection" class="section" style="display:none;">Book Appointment Section</div>
-    <div id="addDoctorSection" class="section" style="display:none;">Add Doctor Section</div>
-    <div id="addPatientSection" class="section" style="display:none;">Add Patient Section</div>
-  </div>
 </div>
 
 <script src="js/dashboard.js"></script>

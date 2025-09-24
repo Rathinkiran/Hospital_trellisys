@@ -49,7 +49,7 @@ $routes->group("appointment" , ["namespace" => "App\Controllers" , "filter" => "
     });
 
     $routes->group('', ['filter' => 'role_Doctor_and_Admin'], function ($routes) {
-      $routes->put('complete-Appointment' , [AppointmentController::class , 'completeAppointment']);    
+      $routes->post('complete-Appointment' , [AppointmentController::class , 'completeAppointment']);    
     });
 
     
