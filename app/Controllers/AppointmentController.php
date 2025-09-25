@@ -876,4 +876,44 @@ public function getPatientStats()
     }
 }
 
+public function cancelAppointment()
+{
+    try{
+      $userData = $this->request->userData;
+
+      $appointmentId = $this->request->getVar("appointmentId");
+
+      $appointmentDetails = $this->appointmentModel->find();
+
+      if($appointmentDetails['status'] != 'booked')
+      {
+        return $this->respond([
+            "status" => false,
+            "Mssge" => "Cannot cancel an appointment which is not booked , May be the appointment is rescheduled"
+        ]);
+      }
+      
+
+      $result = $this->appointmentModel->where("id" , $appointmentId)
+                                       ->set('status' , 'cancelled')
+                                       ->update();
+
+      if($result)
+      {
+        return $this->respond([
+            "status" => true,
+            "Mssge" => "Successfully cancelled the appointment"
+        ]);
+      }
+     
+
+    }catch(\Exception $e)
+    {
+       return $this->respond([  
+            "status" => false,
+            "Error" => $e->getMessage(), 
+        ]);
+    }
+}
+
 }

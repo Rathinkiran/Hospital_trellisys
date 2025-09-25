@@ -69,18 +69,18 @@ if (statusValue === "completed") {
 // Update status cell safely
 const statusText = a.status || "Unknown";
 
-tbody.append(`
-  <tr>
-    <td>${a.id}</td>
-    <td>${escapeHtml(a.DoctorName || '')}</td>
-    <td>${escapeHtml(a.PatientName || '')}</td>
-    <td>${a.Appointment_date || ''}</td>
-    <td>${start12}</td>
-    <td>${end12}</td>
-    <td><span class="status ${statusValue}">${statusText}</span></td>
-    <td class="actions">${actionButtons}</td>
-  </tr>
-`);
+    tbody.append(`
+      <tr>
+        <td>${a.id}</td>
+        <td>${escapeHtml(a.DoctorName || '')}</td>
+        <td>${escapeHtml(a.PatientName || '')}</td>
+        <td>${a.Appointment_date || ''}</td>
+        <td>${start12}</td>
+        <td>${end12}</td>
+        <td><span class="status ${statusValue}">${statusText}</span></td>
+        <td class="actions">${actionButtons}</td>
+      </tr>
+    `);
 
         });
       } else {

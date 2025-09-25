@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Appointments - Doctor/Admin</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
+    h2 { margin-bottom: 15px; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+    th { background: #f1f1f1; }
+    .status { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; }
+    .status.booked { background: #cce5ff; color: #004085; }
+    .status.rescheduled { background: #fff3cd; color: #856404; }
+    .status.completed { background: #d4edda; color: #155724; }
+    .status.cancelled { background: #f8d7da; color: #721c24; }
+    .btn { padding: 6px 10px; border:none; border-radius:4px; cursor:pointer; font-size:13px; margin-right:5px; }
+    .btn-complete { background:#28a745; color:white; }
+    .btn-reschedule { background:#ffc107; color:black; }
+    .btn-cancel { background:#dc3545; color:white; }
+    .back-btn { margin-bottom: 20px; background: #6c757d; color: white; padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; }
+    .label-only { padding:4px 8px; border-radius:4px; background:#6c757d; color:white; font-weight:bold; }
+  </style>
+</head>
+<body>
+  <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back</button>
+  <h2>Appointments</h2>
+
+  <table id="appointmentsTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Doctor</th>
+        <th>Patient</th>
+        <th>Date</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+$(document).ready(function () {
+  const token = localStorage.getItem("token");
+  if (!token) { window.location.href = "index.html"; return; }
+
+  function formatSqlTimeTo12(sqlTime) {
+    if (!sqlTime) return "";
+    const [h,m] = sqlTime.split(":");
+    let hour = parseInt(h,10);
+    const ampm = hour >= 12 ? "PM":"AM";
+    hour = hour % 12 === 0 ? 12 : hour % 12;
+    return `${hour}:${m} ${ampm}`;
+  }
+
+  function escapeHtml(s){return String(s||"").replace(/[&<>"'`=\/]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;","/":"&#47;","=":"&#61;","`":"&#96;"}[c]));}
+
+  function loadAppointments() {
+    $.ajax({
+      url: "http://localhost:8080/appointment/List-appointments",
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+      success: function(res){
+        const tbody = $("#appointmentsTable tbody");
+        tbody.empty();
+        (res.data||[]).forEach(a=>{
+          const start12 = formatSqlTimeTo12(a.Appointment_startTime);
+          const end12 = formatSqlTimeTo12(a.Appointment_endTime);
+          const statusValue = (a.status??"").toLowerCase();
+          let actions = "";
+          if(statusValue==="completed"){
+            actions = `<span class="label-only">Completed</span>`;
+          } else if(statusValue==="rescheduled"){
+            actions = `<span class="label-only">Rescheduled</span>`;
+          } else if(statusValue==="cancelled"){
+            actions = `<span class="label-only">Cancelled</span>`;
+          } else {
+            actions = `
+              <button class="btn btn-complete" data-id="${a.id}">Complete</button>
+              <button class="btn btn-reschedule" data-id="${a.id}">Reschedule</button>
+              <button class="btn btn-cancel" data-id="${a.id}">Cancel</button>
+            `;
+          }
+
+          tbody.append(`
+            <tr>
+              <td>${a.id}</td>
+              <td>${escapeHtml(a.DoctorName)}</td>
+              <td>${escapeHtml(a.PatientName)}</td>
+              <td>${a.Appointment_date||""}</td>
+              <td>${start12}</td>
+              <td>${end12}</td>
+              <td><span class="status ${statusValue}">${a.status||"Unknown"}</span></td>
+              <td>${actions}</td>
+            </tr>
+          `);
+        });
+      }
+    });
+  }
+
+  // click events for complete/reschedule/cancel can be wired like before...
+  loadAppointments();
+});
+</script>
+</body>
+</html>
