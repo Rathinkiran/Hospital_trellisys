@@ -110,7 +110,7 @@ function generateAppointmentPDF(apiResponse) {
   const doc = new jsPDF();
   
   const appointment = apiResponse.appointment;
-console.log(appointment);
+  console.log(appointment);
   doc.setFontSize(16);
   doc.text("Appointment Confirmation", 20, 20);
 

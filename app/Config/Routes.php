@@ -28,6 +28,7 @@ $routes->group("api" , ["namespace" => "App\Controllers", "filter" => "Auth" ] ,
     // Routes for doctor + admin , tat sol
     $routes->group('', ['filter' => 'role_Doctor_and_Admin'], function ($routes) {
         $routes->post('add-Patients', [AdminController::class, 'addPatient']);
+        $routes->post('cancel-Appointment' , [AppointmentController::class , 'cancelAppointment']);
         
         $routes->delete('Delete-Patient', [AdminController::class, 'deletePatient']);
     });

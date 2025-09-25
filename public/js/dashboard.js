@@ -1,11 +1,11 @@
 $(document).ready(function () {
-    // ---------- AUTH CHECK ----------
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role") || "2"; // 0=Admin,1=Doctor,2=Patient
     const userName = localStorage.getItem("userName") || "User";
 
     if (!token) {
         window.location.href = "index.html";
+        return;
     }
 
     // ---------- SET WELCOME INFO ----------
@@ -13,49 +13,51 @@ $(document).ready(function () {
     $(".profile-icon").text(userName.charAt(0).toUpperCase());
 
     // ---------- ROLE-BASED MENU ----------
-    $("#addDoctorMenu, #addPatientMenu, #bookAppointmentMenu, #patientsMenu, #appointmentsMenu").addClass("hidden");
+    $("#addDoctorMenu, #addPatientMenu, #bookAppointmentMenu, #patientsMenu, #appointmentsMenu, #doctorsMenu, #showHistory").addClass("hidden");
 
     if (role === "0") { // Admin
-        $("#addDoctorMenu, #addPatientMenu, #doctorsMenu, #patientsMenu, #appointmentsMenu,#bookAppointmentMenu").removeClass("hidden");
+        $("#addDoctorMenu, #addPatientMenu, #doctorsMenu, #patientsMenu, #appointmentsMenu, #bookAppointmentMenu").removeClass("hidden");
         $("#dashboardSection").show();
+        $("#patientDashboardSection").hide();
     } else if (role === "1") { // Doctor
         $("#patientsMenu, #appointmentsMenu, #showHistory").removeClass("hidden");
         $("#dashboardSection").show();
+        $("#patientDashboardSection").hide();
     } else if (role === "2") { // Patient
-    $("#bookAppointmentMenu, #appointmentsMenu, #showHistory").removeClass("hidden");
-    $("#dashboardSection").hide();  // Hide admin stats
-    $("#patientDashboardSection").show();
+        $("#bookAppointmentMenu, #appointmentsMenu, #showHistory").removeClass("hidden");
+        $("#dashboardSection").hide();
+        $("#patientDashboardSection").show();
 
-    // Fetch patient details
-    $.ajax({
-        url: "http://localhost:8080/appointment/getDetailsforPatient",
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-        success: function(res) {
-            if (res.status) {
-                $("#pName").text(res.data.name);
-                $("#pEmail").text(res.data.email);
-                $("#pGender").text(res.data.gender);
-                $("#pDOB").text(res.data.DOB);
-                $("#pPhoto").attr("src", res.data.photo);
+        // Fetch patient details
+        $.ajax({
+            url: "http://localhost:8080/appointment/getDetailsforPatient",
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+            success: function (res) {
+                if (res.status) {
+                    $("#pName").text(res.data.name || "-");
+                    $("#pEmail").text(res.data.email || "-");
+                    $("#pGender").text(res.data.gender || "-");
+                    $("#pDOB").text(res.data.DOB || "-");
+                    $("#pPhoto").attr("src", res.data.photo || "https://via.placeholder.com/100");
+                }
             }
-        }
-    });
+        });
 
-    // Fetch patient stats
-    $.ajax({
-        url: "http://localhost:8080/appointment/getPatientStats",
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-        success: function(res) {
-            if (res.status) {
+        // Fetch patient stats
+        $.ajax({
+            url: "http://localhost:8080/appointment/getPatientStats",
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+            success: function (res) {
+                if (res.status) {
                 const labels = res.data.map(d => d.date);
                 const weights = res.data.map(d => d.weight);
                 const systolic = res.data.map(d => d.bp_systolic);
                 const diastolic = res.data.map(d => d.bp_diastolic);
 
-                // Weight Chart
-                new Chart(document.getElementById("weightChart"), {
+                    // Ensure the section is visible
+                          new Chart(document.getElementById("weightChart"), {
                     type: "line",
                     data: {
                         labels: labels,
@@ -100,17 +102,19 @@ $(document).ready(function () {
     });
 }
 
-    // ---------- FETCH STATS ----------
-    $.ajax({
-        url: "http://localhost:8080/api/dashboard/stats",
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-        success: function (res) {
-            $("#doctorsCount").text(res.doctors || 0);
-            $("#patientsCount").text(res.patients || 0);
-            $("#appointmentsCount").text(res.appointments || 0);
-        }
-    });
+    // ---------- FETCH ADMIN STATS ----------
+    if (role === "0") {
+        $.ajax({
+            url: "http://localhost:8080/api/dashboard/stats",
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+            success: function (res) {
+                $("#doctorsCount").text(res.doctors || 0);
+                $("#patientsCount").text(res.patients || 0);
+                $("#appointmentsCount").text(res.appointments || 0);
+            }
+        });
+    }
 
     // ---------- SIDEBAR NAVIGATION ----------
     $(".sidebar-menu li").on("click", function () {
@@ -119,20 +123,24 @@ $(document).ready(function () {
         const section = $(this).data("section");
         $(".section").hide();
         $(`#${section}Section`).show();
+        // Update charts if patient section is shown
+        if (section === "patientDashboard" && window.weightChart) {
+            window.weightChart.update();
+            window.bpChart.update();
+        }
     });
 
-    // ---------- EDIT PROFILE INLINE ----------
+    // ---------- EDIT PROFILE ----------
     $("#editProfileBtn").on("click", function () {
-        // Fetch current profile
         $.ajax({
             url: "http://localhost:8080/api/update-profile",
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
             success: function (res) {
-                const user = res.data;
-                $("#editName").val(user.name);
-                $("#editEmail").val(user.email);
-                $("#editGender").val(user.gender);
+                const user = res.data || {};
+                $("#editName").val(user.name || "");
+                $("#editEmail").val(user.email || "");
+                $("#editGender").val(user.gender || "");
                 if (role === "1") $("#editExpertise").val(user.expertise || "");
                 if (role === "2") $("#editProblem").val(user.problem || "");
                 $("#editPassword").val("");
@@ -166,7 +174,7 @@ $(document).ready(function () {
             data: data,
             success: function (res) {
                 if (res.status) {
-                    alert(res.mssge);
+                    alert(res.mssge || "Profile updated");
                     $("#editProfileForm").slideUp();
                     localStorage.setItem("userName", res.data.name);
                     $("#userWelcome").text(`Welcome, ${res.data.name}`);
