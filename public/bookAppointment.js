@@ -85,7 +85,8 @@ $(document).ready(function () {
     $("#responseMessage").removeClass("error").addClass("success").text(res.mssge);
 
     // Generate and download PDF
-    generateAppointmentPDF(res);
+    //generateAppointmentPDF(res);
+    //sendWhatsAppNotification(res);
 
     // Redirect to appointments.html after a short delay
     setTimeout(() => {
@@ -103,6 +104,9 @@ $(document).ready(function () {
       }
     });
   });
+
+
+
 
   // --- PDF generation ---
 function generateAppointmentPDF(apiResponse) {
@@ -125,6 +129,53 @@ function generateAppointmentPDF(apiResponse) {
   doc.text("Thank you for booking your appointment.", 20, 110);
 
   doc.save(`appointment_${apiResponse.Result || "unknown"}.pdf`);
+}
+
+
+function sendWhatsAppNotification()
+{
+  const apiKey = "";
+
+  const phoneNumber = appointment.patientNumber.replace();
+
+  const message = `Hello ${appointment.patientName},
+
+
+Your appointment has been successfully booked!
+
+
+Doctor : ${appointment.doctorName}
+Date : ${appointment.data}
+Time : ${appointment.time}
+Status: Booked
+
+Please arrive 10 minutes early and carry any necessary documents.
+
+
+Thank you,
+ABC Hospital`;
+
+
+
+   // Call the CallMeBot API
+   $.ajax({
+    url : `https://api.callmebot.com/sendWhatsAppNotification.php`,
+    method : "GET",
+    data : {
+      phone: phoneNumber,
+      text: message,
+      apikey: apiKey
+    },
+    success: function(res)
+    {
+      console.log("Whatsapp message sent:", res);
+    },
+    error: function(xhr) {
+      console.error("Failed to send whatsApp message:", xhr.responseText);
+    }
+
+   })
+
 }
 
 });

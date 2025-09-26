@@ -208,6 +208,7 @@ public function ListAppointment()
 
         $role = $user['role'];
         $patientName = $user['name'];
+        $patientNumber = $user['phone_no'] ?? null;
     
         
         $patientId = $user['id'];
@@ -336,6 +337,7 @@ public function ListAppointment()
                     "doctorName" => $doctorName,
                     "patient_id" => $patientId,
                     "patientName" => $patientName,
+                    "patientNumber" => $patientNumber,
                     "date"   => $appointment_date,   
                     "time" => $startTime
                 ],
@@ -877,6 +879,7 @@ public function getPatientStats()
         ]);
     }
 }
+
 
 public function cancelAppointment()
 {
