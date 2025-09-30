@@ -557,10 +557,17 @@ public function stats()
 public function getDetailsforPatient()
 {
     try{
-       $userData = $this->request->userData;
-       $id = $userData->user->id;
 
-       $userDetails = $this->userModel->find($id);
+       $patientId = $this->request->getVar('patientId');
+
+        if (!$patientId) 
+        {
+            $userData = $this->request->userData;
+            $patientId = $userData->user->id;
+        }
+
+        $userDetails = $this->userModel->find($patientId);
+
 
        $data = [
         "name" => $userDetails['name'],

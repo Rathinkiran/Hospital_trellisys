@@ -95,10 +95,12 @@ class LoginController extends ResourceController
      }
 
      $email = $this->request->getVar('email');
-
-     $user = $this->userModel->where("email" , $email)->first();
      $password = $this->request->getVar('password');
 
+     $user = $this->userModel->where("email" , $email)
+                             ->where("password" , $password)
+                             ->first();
+     
 
      if(!$user)
      {

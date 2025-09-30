@@ -37,7 +37,9 @@ class AppointmentController extends ResourceController
 public function ListAppointment()
 {
     try {
-
+        $userRole = $this->request->role;
+        $userId = $this->request->id;
+        
         $userRole = $this->request->role;
         $userId = $this->request->id;
         // print_r($userId);
@@ -538,76 +540,91 @@ public function rescheduleAppointment()
 public function ExportAppointmentsCSV()
 {
     try {
-    $appointmentId = $this->request->getVar("appointmentId");
-    $search        = $this->request->getVar("search");
-    $doctorName    = $this->request->getVar("doctorName");
-    $patientName   = $this->request->getVar("patientName");
-    $doctorId      = $this->request->getVar("doctorId");
-    $patientId     = $this->request->getVar("patientId");
-    $status        = $this->request->getVar("status");
-    $date          = $this->request->getVar("date"); 
-    $dateFilter    = $this->request->getVar("dateFilter");
-    
+        $userRole = $this->request->userData->user->role;
+        $userId = $this->request->userData->user->id;
 
-    $builder = $this->appointmentModel
-        ->select("appointments.id,
-                  appointments.status,
-                  appointments.rescheduled_from,
-                  appointments.reschedule_reason,
-                  appointments.Appointment_date,
-                  appointments.Appointment_startTime,
-                  appointments.Appointment_endTime,
-                  doctor.name as DoctorName,
-                  patient.name as PatientName,
-                  appointments.created_at,
-                  appointments.updated_at")
-        ->join("users as doctor", "doctor.id = appointments.doctor_id", "left")
-        ->join("users as patient", "patient.id = appointments.patient_id", "left");
+        $appointmentId = $this->request->getVar("appointmentId");
+        $search        = $this->request->getVar("search");
+        $doctorName    = $this->request->getVar("doctorName");
+        $patientName   = $this->request->getVar("patientName");
+        $doctorId      = $this->request->getVar("doctorId");
+        $patientId     = $this->request->getVar("patientId");
+        $status        = $this->request->getVar("status");
+        $date          = $this->request->getVar("date");
+        $dateFilter    = $this->request->getVar("dateFilter");
 
-    // Appointment ID filter (reschedule history)
-    if (!empty($appointmentId)) {
-        $builder->groupStart()
-                ->where("appointments.id", $appointmentId)
-                ->orWhere("appointments.parent_id", $appointmentId)
-                ->groupEnd();
-    }
+        $builder = $this->appointmentModel
+            ->select("appointments.id,
+                      appointments.status,
+                      appointments.rescheduled_from,
+                      appointments.reschedule_reason,
+                      appointments.Appointment_date,
+                      appointments.Appointment_startTime,
+                      appointments.Appointment_endTime,
+                      doctor.name as DoctorName,
+                      patient.name as PatientName,
+                      appointments.created_at,
+                      appointments.updated_at")
+            ->join("users as doctor", "doctor.id = appointments.doctor_id", "left")
+            ->join("users as patient", "patient.id = appointments.patient_id", "left");
 
-    // Search by doctor/patient name
-    if (!empty($search)) {
-        $builder->groupStart()
-                ->like("doctor.name", $search)
-                ->orLike("patient.name", $search)
-                ->groupEnd();
-    }
-
-    // Other filters
-    if (!empty($doctorName)) { $builder->where("doctor.name", $doctorName); }
-    if (!empty($doctorId))   { $builder->where("appointments.doctor_id", $doctorId); }
-    if (!empty($patientName)) { $builder->where("patient.name", $patientName); }
-    if (!empty($patientId))   { $builder->where("appointments.patient_id", $patientId); }
-    if (!empty($status))      { $builder->where("appointments.status", $status); }
-    if (!empty($date))        { $builder->where("appointments.Appointment_date", $date); }
-    if (!empty($dateFilter)) {
-        $today = date('Y-m-d');
-        if ($dateFilter === 'today') {
-            $builder->where("appointments.Appointment_date", $today);
+        // role-based filtering
+        if ($userRole == 2) { // Patient
+            $builder->groupStart()
+                        ->where("appointments.patient_id", $userId)
+                        ->orWhere("appointments.parent_id IN (SELECT id FROM appointments WHERE patient_id={$userId})")
+                    ->groupEnd();
+        } elseif ($userRole == 1) { // Doctor
+            $builder->groupStart()
+                        ->where("appointments.doctor_id", $userId)
+                        ->orWhere("appointments.parent_id IN (SELECT id FROM appointments WHERE doctor_id={$userId})")
+                    ->groupEnd();
         }
-        if ($dateFilter === 'this_week') {
-            $monday = date('Y-m-d', strtotime('monday this week'));
-            $sunday = date('Y-m-d', strtotime('sunday this week'));
-            $builder->where("appointments.Appointment_date >=", $monday);
-            $builder->where("appointments.Appointment_date <=", $sunday);
-        }
-        if ($dateFilter === 'last_month') {
-            $firstDayLastMonth = date('Y-m-01', strtotime('first day of last month'));
-            $lastDayLastMonth  = date('Y-m-t', strtotime('last month'));
-            $builder->where("appointments.Appointment_date >=", $firstDayLastMonth);
-            $builder->where("appointments.Appointment_date <=", $lastDayLastMonth);
-        }
-    }
 
-    $appointments = $builder->orderBy('appointments.id', 'DESC')->findAll();
+        // appointment ID filter
+        if (!empty($appointmentId)) {
+            $builder->groupStart()
+                    ->where("appointments.id", $appointmentId)
+                    ->orWhere("appointments.parent_id", $appointmentId)
+                    ->groupEnd();
+        }
 
+        // search by doctor/patient
+        if (!empty($search)) {
+            $builder->groupStart()
+                    ->like("doctor.name", $search)
+                    ->orLike("patient.name", $search)
+                    ->groupEnd();
+        }
+
+        // other filters
+        if (!empty($doctorName)) $builder->where("doctor.name", $doctorName);
+        if (!empty($doctorId))   $builder->where("appointments.doctor_id", $doctorId);
+        if (!empty($patientName)) $builder->where("patient.name", $patientName);
+        if (!empty($patientId))   $builder->where("appointments.patient_id", $patientId);
+        if (!empty($status))      $builder->where("appointments.status", $status);
+        if (!empty($date))        $builder->where("appointments.Appointment_date", $date);
+
+        if (!empty($dateFilter)) {
+            $today = date('Y-m-d');
+            if ($dateFilter === 'today') {
+                $builder->where("appointments.Appointment_date", $today);
+            }
+            if ($dateFilter === 'this_week') {
+                $monday = date('Y-m-d', strtotime('monday this week'));
+                $sunday = date('Y-m-d', strtotime('sunday this week'));
+                $builder->where("appointments.Appointment_date >=", $monday);
+                $builder->where("appointments.Appointment_date <=", $sunday);
+            }
+            if ($dateFilter === 'last_month') {
+                $firstDayLastMonth = date('Y-m-01', strtotime('first day of last month'));
+                $lastDayLastMonth  = date('Y-m-t', strtotime('last month'));
+                $builder->where("appointments.Appointment_date >=", $firstDayLastMonth);
+                $builder->where("appointments.Appointment_date <=", $lastDayLastMonth);
+            }
+        }
+
+        $appointments = $builder->orderBy('appointments.id', 'DESC')->findAll();
 
         // Set headers for CSV
         $filename = "appointments_export_" . date('Y-m-d_H-i-s') . ".csv";
@@ -624,25 +641,24 @@ public function ExportAppointmentsCSV()
             "Created At", "Updated At"
         ]);
 
-        // Write data
         foreach ($appointments as $row) {
-    fputcsv($output, [
-        $row['id'],
-        $row['status'],
-        $row['rescheduled_from'],
-        $row['reschedule_reason'],
-        $row['Appointment_date'],
-        !empty($row['Appointment_startTime']) ? date("g:i A", strtotime($row['Appointment_startTime'])) : '',
-        !empty($row['Appointment_endTime'])   ? date("g:i A", strtotime($row['Appointment_endTime']))   : '',
-        $row['DoctorName'],
-        $row['PatientName'],
-        $row['created_at'],
-        $row['updated_at']
-    ]);
- }
+            fputcsv($output, [
+                $row['id'],
+                $row['status'],
+                $row['rescheduled_from'],
+                $row['reschedule_reason'],
+                $row['Appointment_date'],
+                !empty($row['Appointment_startTime']) ? date("g:i A", strtotime($row['Appointment_startTime'])) : '',
+                !empty($row['Appointment_endTime'])   ? date("g:i A", strtotime($row['Appointment_endTime']))   : '',
+                $row['DoctorName'],
+                $row['PatientName'],
+                $row['created_at'],
+                $row['updated_at']
+            ]);
+        }
 
         fclose($output);
-        exit; 
+        exit;
 
     } catch (\Exception $e) {
         return $this->respond([
@@ -651,6 +667,7 @@ public function ExportAppointmentsCSV()
         ]);
     }
 }
+
 
 
 public function completeAppointment()
@@ -782,9 +799,16 @@ public function showHistory()
     try{
        $userData = $this->request->userData;
 
-       $userDetails = $this->userModel->find($userData->user->id);
+       $patientId = $this->request->getVar('patientId');
+       if (!$patientId) {
+           $userDetails = $this->userModel->find($userData->user->id);
+           $patientId = $userDetails["id"];
+       }
 
-       $userId = $userDetails["id"];
+       $userDetails = $this->userModel->find($userData->user->id);
+       $patientName = $userDetails['name'];
+
+
 
 
        //For Patient
@@ -793,6 +817,7 @@ public function showHistory()
                                     a.doctor_id,
                                     a.patient_id,
                                     u.name as doctorName,
+                                    p.name as patientName,
                                     a.status,
                                     a.Appointment_date,
                                     a.Appointment_startTime,
@@ -805,11 +830,12 @@ public function showHistory()
                                     v.doctor_comment
                                     ')
                             ->where([
-                                "a.patient_id" => $userId,
+                                "a.patient_id" => $patientId,
                                 "a.status" => "completed"
                             ])
                             ->join('visit_records v' , 'v.appointment_id = a.id')
                             ->join('users u' , 'u.id = a.doctor_id')
+                            ->join('users as p' , 'p.id = a.patient_id')
                             ->orderBy('a.Appointment_date' , 'DESC')
                             ->get()
                             ->getResultArray();
@@ -819,6 +845,7 @@ public function showHistory()
             'appointment_id'       => $row['appointment_id'],
             'doctor_id'            => $row['doctor_id'],
             'doctorName'           => $row['doctorName'],
+            'patientName'          => $row['patientName'],
             'patient_id'           => $row['patient_id'],
             'status'               => $row['status'],
             'appointment_date'     => $row['Appointment_date'],
@@ -855,8 +882,13 @@ public function showHistory()
 public function getPatientStats()
 {
     try {
-        $userData = $this->request->userData;
-        $patientId = $userData->user->id;
+       $userData = $this->request->userData;
+        
+        // Get patientId from query parameter, or use logged-in user's ID
+        $patientId = $this->request->getVar('patientId');
+        if (!$patientId) {
+            $patientId = $userData->user->id;
+        }
 
         // Fetch weight & BP history for this patient
         $stats = $this->db->table('visit_records v')

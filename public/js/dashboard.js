@@ -1,7 +1,12 @@
 $(document).ready(function () {
     const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role") || "2"; // 0=Admin,1=Doctor,2=Patient
+    const role = localStorage.getItem("role") || "2"; // 0=Admin, 1=Doctor, 2=Patient
     const userName = localStorage.getItem("userName") || "User";
+
+    // Patient viewing mode (for doctors/admins viewing patient dashboard)
+    const isViewingPatient = localStorage.getItem("isViewingPatient") === "true";
+    const viewingPatientId = localStorage.getItem("viewingPatientId");
+    const viewingPatientName = localStorage.getItem("viewingPatientName");
 
     if (!token) {
         window.location.href = "index.html";
@@ -10,27 +15,111 @@ $(document).ready(function () {
 
     // ---------- SET WELCOME INFO ----------
     $("#userWelcome").text(`Welcome, ${userName}`);
-    $(".profile-icon").text(userName.charAt(0).toUpperCase());
 
-    // ---------- ROLE-BASED MENU ----------
-    $("#addDoctorMenu, #addPatientMenu, #bookAppointmentMenu, #patientsMenu, #appointmentsMenu, #doctorsMenu, #showHistory").addClass("hidden");
+    // ---------- HANDLE PATIENT VIEWING MODE ----------
+    if (isViewingPatient && viewingPatientId && (role === "0" || role === "1")) {
+        setupPatientViewingMode();
+    } else {
+        setupNormalDashboard();
+    }
 
-    if (role === "0") { // Admin
-        $("#addDoctorMenu, #addPatientMenu, #doctorsMenu, #patientsMenu, #appointmentsMenu, #bookAppointmentMenu").removeClass("hidden");
-        $("#dashboardSection").show();
+    // ---------- NORMAL DASHBOARD SETUP ----------
+    function setupNormalDashboard() {
+        console.log("summa");
+        // Reset viewing mode UI
+        $("#viewingPatientHeader").hide();
+        $("#patientInfoTitle").text("My Details");
+        $("#historyTitle").text("History");
         $("#patientDashboardSection").hide();
-    } else if (role === "1") { // Doctor
-        $("#patientsMenu, #appointmentsMenu, #showHistory").removeClass("hidden");
         $("#dashboardSection").show();
-        $("#patientDashboardSection").hide();
-    } else if (role === "2") { // Patient
-        $("#bookAppointmentMenu, #appointmentsMenu, #showHistory").removeClass("hidden");
+
+        // Role-based menu visibility
+        $("#addDoctorMenu, #addPatientMenu, #bookAppointmentMenu, #patientsMenu, #appointmentsMenu, #doctorsMenu, #showHistory").addClass("hidden");
+
+        if (role === "0") { // Admin
+            $("#addDoctorMenu, #addPatientMenu, #doctorsMenu, #patientsMenu, #appointmentsMenu, #bookAppointmentMenu").removeClass("hidden");
+            $("#dashboardSection").show();
+            $("#patientDashboardSection").hide();
+            console.log("1");
+            loadAdminStats();
+            console.log("2");
+        } else if (role === "1") { // Doctor
+            $("#patientsMenu, #appointmentsMenu, #showHistory").removeClass("hidden");
+            $("#dashboardSection").show();
+            $("#patientDashboardSection").hide();
+            console.log("3");
+            loadAdminStats();
+            console.log("4");
+        } else if (role === "2") { // Patient
+            $("#bookAppointmentMenu, #appointmentsMenu, #showHistory").removeClass("hidden");
+            $("#dashboardSection").hide();
+            $("#patientDashboardSection").show();
+            loadPatientDetails();
+            loadPatientStats();
+            loadPatientHistory();
+        }
+    }
+
+    // ---------- PATIENT VIEWING MODE ----------
+    function setupPatientViewingMode() {
+        console.log("summa2");
+        $("#viewingPatientHeader").show();
+        $("#viewingPatientTitle").text(`Viewing Patient: ${viewingPatientName || "Unknown"}`);
+        $("#patientInfoTitle").text("Patient Details");
+        $("#historyTitle").text("Patient History");
+
         $("#dashboardSection").hide();
         $("#patientDashboardSection").show();
 
-        // Fetch patient details
+        loadPatientDetails(viewingPatientId);
+        loadPatientStats(viewingPatientId);
+        loadPatientHistory(viewingPatientId);
+
+        $("#backToDashboardBtn").on("click", function () {
+            localStorage.removeItem("isViewingPatient");
+            localStorage.removeItem("viewingPatientId");
+            localStorage.removeItem("viewingPatientName");
+            window.location.reload();
+        });
+    }
+
+    // ---------- API CALLS ----------
+    function loadAdminStats() {
+    console.log("Loading admin stats with token:", token ? "Present" : "Missing");
+    
+    $.ajax({
+        url: "http://localhost:8080/api/dashboard/stats",
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+        success: function (res) {
+            console.log("Raw response:", res);
+            console.log("Doctors:", res.doctors, "Patients:", res.patients, "Appointments:", res.appointments);
+            
+            $("#doctorsCount").text(res.doctors || 0);
+            $("#patientsCount").text(res.patients || 0);
+            $("#appointmentsCount").text(res.appointments || 0);
+        },
+        error: function (xhr, status, error) {
+            console.error("AJAX Error:", {
+                status: xhr.status,
+                statusText: xhr.statusText,
+                responseText: xhr.responseText, 
+                error: error
+            });
+            
+            $("#doctorsCount").text(0);
+            $("#patientsCount").text(0);
+            $("#appointmentsCount").text(0);
+        }
+    });
+}
+
+    function loadPatientDetails(patientId = null) {
+        console.log("Loading patient details for:", patientId);
         $.ajax({
-            url: "http://localhost:8080/appointment/getDetailsforPatient",
+            url: patientId
+                ? `http://localhost:8080/appointment/getDetailsforPatient?patientId=${patientId}`
+                : "http://localhost:8080/appointment/getDetailsforPatient",
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
             success: function (res) {
@@ -43,10 +132,17 @@ $(document).ready(function () {
                 }
             }
         });
+    }
 
-        // Fetch patient stats
+
+      // ✅ Patient Stats (Charts)
+    function loadPatientStats(patientId = null) {
+console.log("Loading loadPatientStats for:", patientId);
+        const url = patientId 
+        ? `http://localhost:8080/appointment/getPatientStats?patientId=${patientId}`
+        : "http://localhost:8080/appointment/getPatientStats";
         $.ajax({
-            url: "http://localhost:8080/appointment/getPatientStats",
+            url: url,
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
             success: function (res) {
@@ -102,33 +198,60 @@ $(document).ready(function () {
     });
 }
 
-    // ---------- FETCH ADMIN STATS ----------
-    if (role === "0") {
+    function loadPatientHistory(patientId = null) {
+        console.log("loadPatientHistory for:", patientId);
+        const url = patientId 
+        ? `http://localhost:8080/appointment/show-History?patientId=${patientId}`
+        : "http://localhost:8080/appointment/show-History";
+
         $.ajax({
-            url: "http://localhost:8080/api/dashboard/stats",
+            url: url,
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
             success: function (res) {
-                $("#doctorsCount").text(res.doctors || 0);
-                $("#patientsCount").text(res.patients || 0);
-                $("#appointmentsCount").text(res.appointments || 0);
+                const tbody = $("#historyTableBody");
+                tbody.empty();
+
+                if (res.status && res.data && res.data.length) {
+                    res.data.forEach((item, index) => {
+                        const detailsId = `details-${index}`;
+                        const row = `
+                            <tr class="main-row" data-target="${detailsId}">
+                                <td>${item.appointment_id}</td>
+                                <td>${item.doctorName}</td>
+                                <td>${item.patientName}</td>
+                                <td>${item.appointment_date}</td>
+                                <td>${item.appointment_startTime}</td>
+                                <td>${item.appointment_endTime}</td>
+                                <td><span class="badge bg-success">${item.status}</span></td>
+                            </tr>
+                            <tr class="details-row" id="${detailsId}" style="display:none;">
+                              <td colspan="7">
+                                <div class="details-box">
+                                  <p><span class="fw-bold">Consultation Date:</span> ${item.visit_records?.date || "-"}</p>
+                                  <p><span class="fw-bold">Reason:</span> ${item.visit_records?.reason || "-"}</p>
+                                  <p><span class="fw-bold">Weight:</span> ${item.visit_records?.weight || "-"} kg</p>
+                                  <p><span class="fw-bold">Blood Pressure:</span> ${item.visit_records?.bp_systolic || "-"}/${item.visit_records?.bp_diastolic || "-"} mmHg</p>
+                                  <p><span class="fw-bold">Doctor Comment:</span> ${item.visit_records?.doctor_comment || "-"}</p>
+                                </div>
+                              </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+
+                    // Toggle details
+                    $(".main-row").on("click", function () {
+                        const targetId = $(this).data("target");
+                        $("#" + targetId).toggle();
+                    });
+                } else {
+                    tbody.append(`<tr><td colspan="7" class="text-center text-muted">No history available</td></tr>`);
+                }
             }
         });
     }
 
-    // ---------- SIDEBAR NAVIGATION ----------
-    $(".sidebar-menu li").on("click", function () {
-        $(".sidebar-menu li").removeClass("active");
-        $(this).addClass("active");
-        const section = $(this).data("section");
-        $(".section").hide();
-        $(`#${section}Section`).show();
-        // Update charts if patient section is shown
-        if (section === "patientDashboard" && window.weightChart) {
-            window.weightChart.update();
-            window.bpChart.update();
-        }
-    });
 
     // ---------- EDIT PROFILE ----------
     $("#editProfileBtn").on("click", function () {
@@ -141,8 +264,8 @@ $(document).ready(function () {
                 $("#editName").val(user.name || "");
                 $("#editEmail").val(user.email || "");
                 $("#editGender").val(user.gender || "");
-                if (role === "1") $("#editExpertise").val(user.expertise || "");
-                if (role === "2") $("#editProblem").val(user.problem || "");
+                if (role === "1") $("#roleSpecificField").html(`<label>Expertise</label><input type="text" id="editExpertise" value="${user.expertise || ""}">`);
+                if (role === "2") $("#roleSpecificField").html(`<label>Problem</label><input type="text" id="editProblem" value="${user.problem || ""}">`);
                 $("#editPassword").val("");
                 $("#editProfileForm").slideDown();
             },
@@ -194,3 +317,4 @@ $(document).ready(function () {
         window.location.href = "index.html";
     });
 });
+

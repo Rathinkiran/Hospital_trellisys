@@ -4,7 +4,8 @@ $(document).ready(function () {
   if (!token) { window.location.href = "index.html"; return; }
 
   // Setup table headers based on role
-  if (role === "2") {
+  if (role === "2") 
+  {
     $("#appointmentsHeader").html(`
       <th>ID</th>
       <th>Doctor</th>
@@ -101,8 +102,9 @@ $(document).ready(function () {
                   <button class="btn-complete" data-id="${a.id}">Complete</button>
                   <button class="btn-reschedule" data-id="${a.id}" data-date="${a.Appointment_date}" data-time="${startInput}">Reschedule</button>
                   <button class="btn-cancel" data-id="${a.id}">Cancel</button>
+                  <button class="btn-history" data-patient-id="${a.patient_id}" data-patient-name="${escapeHtml(a.PatientName || '')}">Show Patient History</button>
                 `;
-              }
+                console.log("The patient id is " , a.patient_id);              }
               row += `<td class="actions">${actionButtons}</td>`;
             }
 
@@ -178,6 +180,27 @@ $(document).ready(function () {
       },
       error: function(xhr){ alert("Failed to cancel appointment. "+xhr.responseText); }
     });
+  });
+
+  // ---------- SHOW PATIENT HISTORY ----------
+  $(document).on("click", ".btn-history", function () {
+    const patientId = $(this).data("patient-id");  // ✅ Change to kebab-case
+    const patientName = $(this).data("patient-name");
+    console.log("patientId is " , patientId);
+    console.log("patientName is " , patientName);
+    
+    if (!patientId) {
+      alert("Patient ID not available");
+      return;
+    }
+    
+    // Store patient info in localStorage to use on dashboard
+    localStorage.setItem("viewingPatientId", patientId);
+    localStorage.setItem("viewingPatientName", patientName);
+    localStorage.setItem("isViewingPatient", "true");
+    
+    // Redirect to dashboard which will show patient history
+    window.location.href = "dashboard.html";
   });
 
   // ---------- BOOK ----------
