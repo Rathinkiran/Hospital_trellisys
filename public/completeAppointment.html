@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complete Appointment</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="js/completeAppointment.js"></script>
+<style>
+body { font-family: Arial, sans-serif; background:#f8f9fa; margin:20px; }
+h2 { margin-bottom:15px; }
+form { background:white; padding:20px; border-radius:10px; max-width:500px; margin:auto; box-shadow:0 5px 15px rgba(0,0,0,0.1);}
+form label { display:block; margin-top:10px; }
+form input, form textarea { width:100%; padding:8px; margin-top:5px; border-radius:4px; border:1px solid #ccc; }
+form button { margin-top:15px; padding:10px 15px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; }
+form button.cancel { background:#e53e3e; margin-left:10px; }
+.back-btn { margin-bottom:20px; background:#6c757d; color:white; padding:8px 14px; border:none; border-radius:4px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="window.location.href='appointments.html'">← Back to Appointments</button>
+
+<h2>Complete Appointment</h2>
+
+<form id="completeAppointmentForm">
+  <input type="hidden" id="appointmentId">
+
+  <label>Reason</label>
+  <textarea id="reason" required></textarea>
+
+  <label>Weight (kg)</label>
+  <input type="number" step="0.1" id="weight" required>
+
+  <label>BP Systolic</label>
+  <input type="number" id="bp_systolic" required>
+
+  <label>BP Diastolic</label>
+  <input type="number" id="bp_diastolic" required>
+
+  <label>Doctor Comment</label>
+  <textarea id="doctor_comment" required></textarea>
+
+  <button type="submit">Submit</button>
+  <button type="button" class="cancel" onclick="window.location.href='appointments.html'">Cancel</button>
+</form>
+
+</body>
+</html>
