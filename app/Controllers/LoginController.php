@@ -139,7 +139,8 @@ class LoginController extends ResourceController
                     "mssge" => "Login Successful",
                     "token" => $token,
                     "role" => $user["role"],
-                    "userName" => $user['name']
+                    "userName" => $user['name'],
+                    "hospital_id" => $user['hospital_id']
                 ]);
 
    }
