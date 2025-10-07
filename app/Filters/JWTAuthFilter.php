@@ -58,6 +58,10 @@ class JWTAuthFilter implements FilterInterface
             $request->userData = $decoded;
             $request->role = $decoded->user->role;
             $request->id = $decoded->user->id;
+            if(isset($decoded->user->hospital_id)) 
+            {
+               $request->hospital_id = $decoded->user->hospital_id;
+            }
         }catch(\Exception $e)
         {
             return Services::response()->setStatusCode(500)->setJSON([

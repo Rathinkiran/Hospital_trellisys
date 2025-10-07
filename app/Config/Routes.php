@@ -11,7 +11,7 @@ use App\Controllers\AppointmentController;
 
 $routes->get('/', 'Home::index');
 
-$routes->post("login"  , "LoginController::login");
+$routes->post("login"  , "LoginController::login/$1");
 $routes->post("register"  , "LoginController::register");
 $routes->get('api/user/(:num)', 'AdminController::getUser/$1');
 $routes->post('api/update-profile', 'AdminController::updateProfile');

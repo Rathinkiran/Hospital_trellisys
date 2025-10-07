@@ -4,26 +4,22 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class AppointmentModel extends Model
+class HospitalsModel extends Model
 {
-    protected $table            = 'appointments';
+    protected $table            = 'hospitals';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        "doctor_id",
-        "patient_id",
-        "Appointment_date",
-        "Appointment_startTime",
-        "Appointment_endTime",
-        "status",
-        "rescheduled_from",
-        "reschedule_reason",
+        "name",
+        "address",
+        "contact_no",
+        "isDeleted",
+        "created_at",
         "updated_at",
-        "parent_id",
-        "hospital_id"
+        "code"
     ];
 
     protected bool $allowEmptyInserts = false;

@@ -97,6 +97,7 @@ class LoginController extends ResourceController
      $email = $this->request->getVar('email');
      $password = $this->request->getVar('password');
 
+     // Verifying whether the user exist in DB
      $user = $this->userModel->where("email" , $email)
                              ->where("password" , $password)
                              ->first();

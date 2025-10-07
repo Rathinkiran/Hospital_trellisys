@@ -6,23 +6,27 @@ use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\UserModel;
 use App\Models\AppointmentModel;
+use App\Models\HospitalsModel;
 use Exception;
 
 class AdminController extends ResourceController
 {
     private $userModel;
     private $appointmentModel;
+    private $hospitalModel;
+    private $db;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
         $this->appointmentModel = new AppointmentModel();
+        $this->hospitalModel = new HospitalsModel();
+        $this->db = db_connect();
     }
 
 
     public function addDoctor()
-    {
-         
+    { 
         $validationRules = [
         "name" => [
             "rules" => "required"
@@ -50,12 +54,25 @@ class AdminController extends ResourceController
         ]);
      }
 
+
+       $hospital_id = $this->request->hospital_id;
+
+
+       if(!$hospital_id)
+       {
+        return $this->respond([
+            "status" => false,
+            "Mssge" => "Admin doesn't have hospital_id"
+        ]);
+       }
+
        $name = $this->request->getVar("name");
        $email = $this->request->getVar("email");
        $password = $this->request->getVar("password");
        $gender = $this->request->getVar("gender");
        $role = "1";
        $expertise = $this->request->getVar("expertise");
+    
 
        $data = [
         "name" => $name,
@@ -63,7 +80,8 @@ class AdminController extends ResourceController
         "password" => $password,
         "gender" => $gender,
         "role" => $role,
-        "expertise" => $expertise
+        "expertise" => $expertise,
+        "hospital_id" => $hospital_id
        ];
 
     //    print_r($data);
@@ -86,6 +104,7 @@ class AdminController extends ResourceController
        ]);
     
     }
+
 
     public function addPatient()
     {        
@@ -152,12 +171,30 @@ class AdminController extends ResourceController
             ]);
     }
 
+
     public function ListDoctors()
     {
         //Shld do some checks
+        $userRole = $this->request->role;
+        
+        //for Admin - using hospital_id from his token
+        $hospital_id = $this->request->hospital_id; 
 
-        $data = $this->userModel->where("role" , "1")->findAll(); // role : 0 => oly list Doctors
+        if(!$hospital_id)
+        {
+            //for SuperAdmin
+            $hospital_id = $this->request->getVar("hospital_id");
+        }
 
+        // $data = $this->userModel->where("role" , "1")
+        //                         ->where("hospital_id" , $hospital_id)
+        //                         ->findAll(); // role : 0 => oly list Doctors
+         $data = $this->userModel->select("users.*,
+                                           hospital.name as HospitalName")
+                                 ->where("role" , "1")
+                                 ->where("hospital_id" , $hospital_id)
+                                 ->join("hospitals as hospital" , "hospital.id=users.hospital_id" , "left")
+                                 ->findAll();
         if($data)
         {
             return $this->respond([
@@ -178,9 +215,22 @@ class AdminController extends ResourceController
 
     public function ListPatients()
     {
+        try{
         //Shld do some checks
+        $hospital_id = $this->request->hospital_id;
 
-        $data = $this->userModel->where("role" , "2")->findAll(); // role : 0 => oly list Doctors
+
+        if(!$hospital_id)
+        {
+            $hospital_id = $this->request->getVar("hospital_id");
+        }
+        
+
+        $data = $this->appointmentModel->select("appointments.patient_id,
+                                                 users.*")
+                                       ->where("appointments.hospital_id" , $hospital_id)
+                                       ->join("users as users" , "users.id=appointments.patient_id")
+                                       ->findAll(); // role : 0 => oly list Doctors
 
 
         if($data)
@@ -196,6 +246,15 @@ class AdminController extends ResourceController
             "mssge" => "Could not fetch the data"
             ]);
         }
+        }
+        catch(\Exception $e)
+        {
+            return $this->respond(([
+                "status" => false,
+                "Error" => $e->getMessage()
+            ]));
+        }
+        
         
     }
 

@@ -22,6 +22,7 @@ class UserModel extends Model
         "problem",
         "created_at",
         "updated_at",
+        "hospital_id"
     ];
 
     protected bool $allowEmptyInserts = false;
