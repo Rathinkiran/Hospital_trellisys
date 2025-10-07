@@ -579,7 +579,7 @@ public function getDetailsforPatient()
 
        return $this->respond([
         "status" => true,
-        "Mssge" => "Successfully fetched Basic Details",
+        "Mssge" => "Successfully fetched all the Basic Details",
         "data" => $data,
        ]);
     }
