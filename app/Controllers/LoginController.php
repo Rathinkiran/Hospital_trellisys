@@ -127,7 +127,8 @@ class LoginController extends ResourceController
                         "id" => $user["id"],
                         "email" => $user["email"],
                         "role"  => $user['role'],
-                        "userName" => $user['name']
+                        "userName" => $user['name'],
+                        "hospital_id" => $user['hospital_id'] ?? null
                     ],
                 ];
            
