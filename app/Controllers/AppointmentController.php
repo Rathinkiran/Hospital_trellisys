@@ -34,6 +34,7 @@ class AppointmentController extends ResourceController
    }
 
 
+
 public function ListAppointment()
 {
     try {
@@ -42,6 +43,20 @@ public function ListAppointment()
         
         $userRole = $this->request->role;
         $userId = $this->request->id;
+
+
+        $hospital_id = $this->request->hospital_id; 
+        print_r($hospital_id);
+        print_r($userRole);
+        print("Hi");
+            die;
+        
+
+        if(!$hospital_id && $userRole != 2)
+        {
+            //for SuperAdmin
+            $hospital_id = $this->request->getVar("hospital_id");
+        }
         // print_r($userId);
         // die;
         
@@ -64,6 +79,13 @@ public function ListAppointment()
             ->join("users as doctor", "doctor.id = appointments.doctor_id", "left")
             ->join("users as patient", "patient.id = appointments.patient_id", "left");
 
+            //hospital based filtering 
+            if($userRole != "2")
+            {
+                $builder->where("appointments.hospital_id" , $hospital_id);
+            }
+
+            
             //user-based filtering
             if ($userRole == 2) { // Patient
             $builder->groupStart()
@@ -176,11 +198,164 @@ public function ListAppointment()
     }
 }
 
+public function ListAppointmentforPatients()
+{
+    try {
+        $userRole = $this->request->role;
+        $userId = $this->request->id;
+        
+        $userRole = $this->request->role;
+        $userId = $this->request->id;
+
+
+       
+       
+        
+        //filters
+        $appointmentId = $this->request->getVar("appointmentId");
+        $doctorName = $this->request->getVar("doctorName");
+        $patientName = $this->request->getVar("patientName");
+        $doctorId    = $this->request->getVar("doctorId");
+        $patientId   = $this->request->getVar("patientId");
+        $status      = $this->request->getVar("status");
+        $date        = $this->request->getVar("date"); // YYYY-MM-DD
+        $dateFilter  = $this->request->getVar("dateFilter");
+        $hospital_id = $this->request->getVar("hospital_id"); // today, this_week, last_month
+
+ 
+        // base builder with joins
+        $builder = $this->appointmentModel
+            ->select("appointments.*,
+                      doctor.name as DoctorName,
+                      patient.name as PatientName,
+                      hospital.name as HospitalName")
+            ->join("users as doctor", "doctor.id = appointments.doctor_id", "left")
+            ->join("users as patient", "patient.id = appointments.patient_id", "left")
+            ->join("hospitals as hospital" , "hospital.id=appointments.hospital_id");
+
+            
+
+            
+            //user-based filtering
+            if ($userRole == 2) { // Patient
+            $builder->groupStart()
+                        ->where("appointments.patient_id", $userId)
+                        ->orWhere("appointments.parent_id IN (SELECT id FROM appointments WHERE patient_id={$userId})")//fetching child
+                    ->groupEnd();
+        } elseif ($userRole == 1) { // Doctor
+            $builder->groupStart()
+                        ->where("appointments.doctor_id" , $userId)
+                        ->orWhere("appointments.parent_id IN (SELECT id FROM appointments WHERE doctor_id = {$userId})")
+                    ->groupEnd();
+        }
+
+        // search based on apppointmentID
+        if(!empty($appointmentId))
+        {
+            $builder->groupStart()
+                ->where("appointments.id", $appointmentId)
+                ->orWhere("appointments.parent_id", $appointmentId)
+            ->groupEnd();
+        }
+
+
+        // doctor filters
+        if (!empty($doctorName)) {
+            $builder->where("doctor.name", $doctorName);
+        }
+        if (!empty($doctorId)) {
+            $builder->where("appointments.doctor_id", $doctorId);
+        }
+
+        // patient filters
+        if (!empty($patientName)) {
+            $builder->where("patient.name", $patientName);
+        }
+        if (!empty($patientId)) {
+            $builder->where("appointments.patient_id", $patientId);
+        }
+
+        // status filter
+        if (!empty($status)) {
+            $builder->where("appointments.status", $status);
+        }
+
+        if(!empty($hospital_id))
+        {
+            $builder->where("appointments.hospital_id" ,$hospital_id);
+        }
+
+        // exact date filter
+        if (!empty($date)) {
+            $builder->where("appointments.Appointment_date", $date);
+        }
+
+        // date range filters
+        if (!empty($dateFilter)) {
+            $today = date('Y-m-d');
+
+            if ($dateFilter === 'today') {
+                $builder->where("appointments.Appointment_date", $today);
+            }
+
+            if ($dateFilter === 'this_week') {
+                $monday = date('Y-m-d', strtotime('monday this week'));
+                $sunday = date('Y-m-d', strtotime('sunday this week'));
+                $builder->where("appointments.Appointment_date >=", $monday);
+                $builder->where("appointments.Appointment_date <=", $sunday);
+            }
+
+            if ($dateFilter === 'last_month') {
+                $firstDayLastMonth = date('Y-m-01', strtotime('first day of last month'));
+                $lastDayLastMonth  = date('Y-m-t', strtotime('last month'));
+                $builder->where("appointments.Appointment_date >=", $firstDayLastMonth);
+                $builder->where("appointments.Appointment_date <=", $lastDayLastMonth);
+            }
+        }
+
+        //sorting
+        $sortBy    = $this->request->getVar("sortBy") ?? "appointments.id";
+        $sortOrder = $this->request->getVar("sortOrder") ?? "ASC";
+
+        //pagination
+        $perPage = 30;
+        $page    = $this->request->getVar("page") ?? 1;
+
+        $data  = $builder->orderBy($sortBy, $sortOrder)->paginate($perPage, 'default', $page);
+        $pager = $builder->pager;
+
+        $currentPage = $pager->getCurrentPage();
+        $totalPages  = $pager->getPageCount();
+
+        $baseUrl = base_url('appointment/List-appointments');
+
+        $paginationInfo = [
+            'total_pages'   => $totalPages,
+            'previous_page' => ($currentPage > 1)
+                ? $baseUrl . '?page=' . ($currentPage - 1)
+                : null,
+            'next_page'     => ($currentPage < $totalPages)
+                ? $baseUrl . '?page=' . ($currentPage + 1)
+                : null,
+        ];
+
+        return $this->respond([
+            "status" => true,
+            "Msgge"  => "Successfully fetched all the Appointments list",
+            "data"   => $data,
+            "pager"  => $paginationInfo
+        ]);
+    } catch (\Exception $e) {
+        return $this->respond([
+            "status" => false,
+            "Error"  => $e->getMessage(),
+        ]);
+    }
+}
 
 
   public function BookAppointment()
   {
-
         try{
         $validationRules = [
             "doctorId" => [
@@ -225,6 +400,7 @@ public function ListAppointment()
             }
             
             $doctorId = $this->request->getVar("doctorId");
+            $hospital_id = $this->request->getVar("hospital_id");
             $doctorDetails = $this->userModel->where("id" , $doctorId)->get()->getRow();
             $doctorName = $doctorDetails->name;
             $doctorRole = $doctorDetails->role;
@@ -321,6 +497,7 @@ public function ListAppointment()
             "Appointment_date" => $appointment_date,
             "Appointment_startTime" => $appointment_startTime,
             "Appointment_endTime" => $appointment_endTime,
+            "hospital_id" => $hospital_id
             ];
 
 
@@ -427,6 +604,7 @@ public function rescheduleAppointment()
     $appointment_endTime = addHoursToTime($appointment_startTime);       
     $doctor_id = $appointmentDetails["doctor_id"];
     $patientId = $appointmentDetails["patient_id"];
+    $hospital_id = $appointmentDetails["hospital_id"];
 
     $validationResult = validateFutureAppointment($newAppointmentDate, $appointment_startTime);
 
@@ -478,7 +656,8 @@ public function rescheduleAppointment()
         "Appointment_date" => $newAppointmentDate,
         "Appointment_startTime" => $appointment_startTime,
         "Appointment_endTime" => $appointment_endTime,
-        "parent_id" => $parent_id
+        "parent_id" => $parent_id,
+        "hospital_id" => $hospital_id
       ];
 
       $this->db->transStart();
@@ -502,9 +681,7 @@ public function rescheduleAppointment()
           }
 
           $newAppointmentid = $this->appointmentModel->insert($data);
-            
-            
-  
+         
 
         if(!$newAppointmentid)
         {
@@ -537,7 +714,7 @@ public function rescheduleAppointment()
 }
 
 
-public function ExportAppointmentsCSV()
+public function ExportAppointmentsCSV() //----- shld check once again
 {
     try {
         $userRole = $this->request->userData->user->role;
@@ -721,6 +898,7 @@ public function completeAppointment()
      
 
        $appointmentId = $this->request->getVar("appointment_id");
+
        $reason = $this->request->getVar("reason");
        $weight = $this->request->getVar("weight");
        $bp_systolic = $this->request->getVar("bp_systolic");
@@ -729,8 +907,8 @@ public function completeAppointment()
     
 
        $appointmentDetails = $this->appointmentModel->find($appointmentId);
-    //       print_r($appointmentDetails);
-    // die;
+          
+       
 
 
 
@@ -744,6 +922,7 @@ public function completeAppointment()
 
        $patient_id = $appointmentDetails['patient_id'];
        $doctor_id = $appointmentDetails['doctor_id'];
+       $hospital_id = $appointmentDetails['hospital_id'];
 
 
        $data = [
@@ -755,6 +934,7 @@ public function completeAppointment()
         "bp_systolic" => $bp_systolic,
         "bp_diastolic" => $bp_diastolic,
         "doctor_comment" => $doctor_comment,
+        "hospital_id" => $hospital_id
        ];
 
        //Starting the transaction
@@ -800,7 +980,8 @@ public function showHistory()
        $userData = $this->request->userData;
 
        $patientId = $this->request->getVar('patientId');
-       if (!$patientId) {
+       if (!$patientId) 
+       {
            $userDetails = $this->userModel->find($userData->user->id);
            $patientId = $userDetails["id"];
        }
@@ -808,70 +989,88 @@ public function showHistory()
        $userDetails = $this->userModel->find($userData->user->id);
        $patientName = $userDetails['name'];
 
-
+       //hospital-filter
+       $hospital_id = $this->request->getVar("hospital_id");
 
 
        //For Patient
-       $query = $this->db->table('appointments a')
-                          ->select('a.id as appointment_id , 
-                                    a.doctor_id,
-                                    a.patient_id,
-                                    u.name as doctorName,
-                                    p.name as patientName,
-                                    a.status,
-                                    a.Appointment_date,
-                                    a.Appointment_startTime,
-                                    a.Appointment_endTime,
-                                    v.reason,
-                                    v.weight,
-                                    v.bp_systolic,
-                                    v.bp_diastolic,
-                                    v.created_at,
-                                    v.doctor_comment
-                                    ')
-                            ->where([
-                                "a.patient_id" => $patientId,
-                                "a.status" => "completed"
-                            ])
-                            ->join('visit_records v' , 'v.appointment_id = a.id')
-                            ->join('users u' , 'u.id = a.doctor_id')
-                            ->join('users as p' , 'p.id = a.patient_id')
-                            ->orderBy('a.Appointment_date' , 'DESC')
-                            ->get()
-                            ->getResultArray();
+       $builder = $this->db->table('appointments a')
+            ->select('
+                a.id as appointment_id, 
+                a.doctor_id,
+                a.patient_id,
+                h.id as HospitalID,
+                h.name as HospitalName,
+                h.contact_no as Hospital_contactNo,
+                h.address as Hospital_address,
+                u.name as doctorName,
+                p.name as patientName,
+                a.status,
+                a.Appointment_date,
+                a.Appointment_startTime,
+                a.Appointment_endTime,
+                v.reason,
+                v.weight,
+                v.bp_systolic,
+                v.bp_diastolic,
+                v.created_at,
+                v.doctor_comment
+            ')
+            ->join('visit_records v', 'v.appointment_id = a.id')
+            ->join('users u', 'u.id = a.doctor_id')
+            ->join('users as p', 'p.id = a.patient_id')
+            ->join('hospitals as h', 'h.id = a.hospital_id')
+            ->where([
+                "a.patient_id" => $patientId,
+                "a.status" => "completed"
+            ]);
 
-       $result = array_map(function($row) {
-        return [
-            'appointment_id'       => $row['appointment_id'],
-            'doctor_id'            => $row['doctor_id'],
-            'doctorName'           => $row['doctorName'],
-            'patientName'          => $row['patientName'],
-            'patient_id'           => $row['patient_id'],
-            'status'               => $row['status'],
-            'appointment_date'     => $row['Appointment_date'],
-            'appointment_startTime'=> $row['Appointment_startTime'],
-            'appointment_endTime'  => $row['Appointment_endTime'],
-            'visit_records' => [
-                'date'          => $row['created_at'],
-                'reason'        => $row['reason'],
-                'weight'        => $row['weight'],
-                'bp_systolic'   => $row['bp_systolic'],
-                'bp_diastolic'  => $row['bp_diastolic'],
-                'doctor_comment'=> $row['doctor_comment'],
-            ]
-        ];
+        // 🏥 Add hospital-wise filter dynamically (if given)
+        if (!empty($hospital_id)) {
+            $builder->where("a.hospital_id", $hospital_id);
+        }
+
+        // 🗓️ Sort by date
+        $query = $builder
+            ->orderBy('a.Appointment_date', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        // 🧾 Format result
+        $result = array_map(function ($row) {
+            return [
+                'appointment_id'        => $row['appointment_id'],
+                'HospitalName'          => $row['HospitalName'],
+                'HospitalID'            => $row['HospitalID'],
+                'doctor_id'             => $row['doctor_id'],
+                'doctorName'            => $row['doctorName'],
+                'patientName'           => $row['patientName'],
+                'patient_id'            => $row['patient_id'],
+                'status'                => $row['status'],
+                'appointment_date'      => $row['Appointment_date'],
+                'appointment_startTime' => $row['Appointment_startTime'],
+                'appointment_endTime'   => $row['Appointment_endTime'],
+                'Hospital_contactNo'    => $row['Hospital_contactNo'],
+                'Hospital_address'      => $row['Hospital_address'],
+                'visit_records' => [
+                    'date'           => $row['created_at'],
+                    'reason'         => $row['reason'],
+                    'weight'         => $row['weight'],
+                    'bp_systolic'    => $row['bp_systolic'],
+                    'bp_diastolic'   => $row['bp_diastolic'],
+                    'doctor_comment' => $row['doctor_comment'],
+                ]
+            ];
         }, $query);
 
- 
-    return $this->respond([
-        "status" => true,
-        "Mssge" => "Fetched successfully",
-        "data" => $result,
-    ]);
+        // ✅ Final response
+        return $this->respond([
+            "status" => true,
+            "Mssge" => "Fetched successfully",
+            "data" => $result,
+        ]);
 
-    }
-    catch(\Exception $e)
-    {
+    } catch (\Exception $e) {
         return $this->respond([
             "status" => false,
             "Error" => $e->getMessage()
@@ -886,7 +1085,8 @@ public function getPatientStats()
         
         // Get patientId from query parameter, or use logged-in user's ID
         $patientId = $this->request->getVar('patientId');
-        if (!$patientId) {
+        if (!$patientId) 
+        {
             $patientId = $userData->user->id;
         }
 
@@ -956,3 +1156,4 @@ public function cancelAppointment()
 }
 
 }
+

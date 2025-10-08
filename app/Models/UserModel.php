@@ -19,10 +19,12 @@ class UserModel extends Model
         "role",
         "gender",
         "expertise",
+        "phone_no",
         "problem",
         "created_at",
         "updated_at",
-        "hospital_id"
+        "hospital_id",
+        "isDeleted"
     ];
 
     protected bool $allowEmptyInserts = false;

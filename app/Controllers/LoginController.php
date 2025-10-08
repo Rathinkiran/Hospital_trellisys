@@ -53,6 +53,7 @@ class LoginController extends ResourceController
             $password = $this->request->getVar("password");
             $problem = $this->request->getVar("problem");
             $role = "2";
+            $phone_no = $this->request->getVar("phone_no");
 
             $data = [
                 "name" => $name,
@@ -61,6 +62,7 @@ class LoginController extends ResourceController
                 "role" => $role,
                 "password" => $password,
                 "problem" => $problem,
+                "phone_no" => $phone_no
             ];
 
             $result = $this->userModel->insert($data);
@@ -70,7 +72,6 @@ class LoginController extends ResourceController
                 "mssge" => "Registered Successfully",
                 "result" => $result,
             ]);
-
     }
 
 

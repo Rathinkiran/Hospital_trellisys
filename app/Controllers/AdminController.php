@@ -27,32 +27,32 @@ class AdminController extends ResourceController
 
     public function addDoctor()
     { 
-        $validationRules = [
-        "name" => [
-            "rules" => "required"
-        ],
-         "gender" => [
-            "rules" => "required"
-        ],
-         "expertise" => [
-            "rules" => "required"
-        ],
-        "email" => [
-            "rules" => "required|min_length[3]|valid_email"
-        ],
-        "password" => [
-            "rules" => "required|min_length[3]|"
-        ]
-     ];
+                $validationRules = [
+                "name" => [
+                    "rules" => "required"
+                ],
+                "gender" => [
+                    "rules" => "required"
+                ],
+                "expertise" => [
+                    "rules" => "required"
+                ],
+                "email" => [
+                    "rules" => "required|min_length[3]|valid_email"
+                ],
+                "password" => [
+                    "rules" => "required|min_length[3]|"
+                ]
+            ];
 
-     if(!$this->validate($validationRules))
-     {
-        return $this->respond([
-            "status" => false,
-            "mssge" => "Fields are required",
-            "Error" => $this->validator->getErrors(),
-        ]);
-     }
+            if(!$this->validate($validationRules))
+            {
+                return $this->respond([
+                    "status" => false,
+                    "mssge" => "Fields are required",
+                    "Error" => $this->validator->getErrors(),
+                ]);
+            }
 
 
        $hospital_id = $this->request->hospital_id;
@@ -84,8 +84,8 @@ class AdminController extends ResourceController
         "hospital_id" => $hospital_id
        ];
 
-    //    print_r($data);
-    //    exit;
+            //    print_r($data);
+            //    exit;
 
        $result = $this->userModel->insert($data);
 
@@ -171,8 +171,29 @@ class AdminController extends ResourceController
             ]);
     }
 
-
     public function ListDoctors()
+    {
+       $data = $this->userModel->where("role" , "1")->findAll();
+
+       
+        if($data)
+        {
+            return $this->respond([
+            "status" => true,
+            "mssge" => "Fetched all the doctors data successfully",
+            "data" => $data,
+            ]);
+        }else{
+             return $this->respond([
+            "status" => false,
+            "mssge" => "Could not fetch the data"
+            ]);
+        }
+
+
+    }
+
+    public function ListDoctorsHospitalwise()
     {
         //Shld do some checks
         $userRole = $this->request->role;
@@ -195,6 +216,7 @@ class AdminController extends ResourceController
                                  ->where("hospital_id" , $hospital_id)
                                  ->join("hospitals as hospital" , "hospital.id=users.hospital_id" , "left")
                                  ->findAll();
+
         if($data)
         {
             return $this->respond([
@@ -213,7 +235,7 @@ class AdminController extends ResourceController
 
 
 
-    public function ListPatients()
+    public function ListPatientsHospitalWise()
     {
         try{
         //Shld do some checks
@@ -259,9 +281,32 @@ class AdminController extends ResourceController
     }
 
 
+    public function ListPatients()
+    {
+        //Shld do some checks
+
+        $data = $this->userModel->where("role" , "2")->findAll(); // role : 0 => oly list Doctors
+
+
+        if($data)
+        {
+            return $this->respond([
+            "status" => true,
+            "mssge" => "Fetched all the Patients data successfully",
+            "data" => $data,
+            ]);
+        }else{
+             return $this->respond([
+            "status" => false,
+            "mssge" => "Could not fetch the data"
+            ]);
+        }
+        
+    }
+
+
     public function editDoctors()
     {
-
        try{
         //    $userData = $this->request->userData;
 
@@ -279,6 +324,7 @@ class AdminController extends ResourceController
                 $gender = $this->request->getVar("gender") ?? $Doctordata["gender"];
                 $expertise = $this->request->getVar("expertise") ?? $Doctordata["expertise"];
                 $email = $this->request->getVar("email") ?? $Doctordata["email"];
+                $phone_no = $this->request->getVar("phone_no") ?? $Doctordata["phone_no"];
 
 
                 $data = [
@@ -287,7 +333,8 @@ class AdminController extends ResourceController
                     "email" => $email,
                     "role" => $role,
                     "gender" => $gender,
-                    "expertise" => $expertise
+                    "expertise" => $expertise,
+                    "phone_no" => $phone_no
                 ];
 
                 $result = $this->userModel->update($id , $data);
@@ -345,9 +392,11 @@ class AdminController extends ResourceController
                 $id = $this->request->getVar("doctorId"); 
 
                 // print_r($id);
-                // exit;
+                // die;
                 
-                $result = $this->userModel->where("id" , $id)->delete();
+                $result = $this->userModel->where("id" , $id)
+                                          ->set(['isDeleted' => 1])
+                                          ->update();
 
                 if($result)
                 {
@@ -373,6 +422,7 @@ class AdminController extends ResourceController
                 ]);
             }
     }
+
 
     public function EditPatient()
     {
@@ -433,10 +483,11 @@ class AdminController extends ResourceController
        try{
           
         $validationRules = [
-            "patientId" => [
-            "rules" => "required"
-                    ]
-                ];
+            "patientId" =>
+             [
+                "rules" => "required"
+             ]
+         ];
 
 
             if(!$this->validate($validationRules))
@@ -451,7 +502,10 @@ class AdminController extends ResourceController
             $id = $this->request->getVar("patientId"); 
 
             
-            $result = $this->userModel->where("id" , $id)->delete();
+            $result = $this->userModel->where("id" , $id)
+                                      ->set(["isDeleted" => 1])
+                                      ->update();
+                                     
                 
 
             if($result)
@@ -481,37 +535,38 @@ class AdminController extends ResourceController
   
 
     public function getUser($userId = null)
-    {
-      try {
-         if (!$userId) {
-            $userId = $this->request->getVar('userId');
-        }
-        
-        $user = $this->userModel->find($userId);
-        
-        if (!$user) {
+    { // for editing his own profile
+        try {
+            if (!$userId) {
+                $userId = $this->request->getVar('userId');
+            }
+            
+            $user = $this->userModel->find($userId);
+            
+            if (!$user) {
+                return $this->respond([
+                    "status" => false,
+                    "mssge" => "User not found"
+                ]);
+            }
+            
+            // Return user details without password
+            unset($user['password']);
+            
+            return $this->respond([
+                "status" => true,
+                "data" => $user
+            ]);
+            
+        } catch (\Exception $e) {
             return $this->respond([
                 "status" => false,
-                "mssge" => "User not found"
+                "mssge" => "Error fetching user details",
+                "error" => $e->getMessage()
             ]);
         }
-        
-        // Return user details without password
-        unset($user['password']);
-        
-        return $this->respond([
-            "status" => true,
-            "data" => $user
-        ]);
-        
-    } catch (\Exception $e) {
-        return $this->respond([
-            "status" => false,
-            "mssge" => "Error fetching user details",
-            "error" => $e->getMessage()
-        ]);
     }
-}
+
 
 public function updateProfile()
 {
@@ -587,23 +642,50 @@ public function updateProfile()
 }
 
 
+
 public function stats()
 {
     try{
+        $userRole = $this->request->role;
+        if($userRole == '3')
+        {
+            $doctorsCount = $this->userModel->where('role' , '1')->countAllResults();
+            $patientsCount = $this->userModel->where('role' , '2')->countAllResults();
+
+            $appointmentsCount = $this->appointmentModel->where('status' , 'booked')->countAllResults();
 
 
-        $doctorsCount = $this->userModel->where('role' , '1')->countAllResults();
-        $patientsCount = $this->userModel->where('role' , '2')->countAllResults();
+            return $this->respond([
+                'doctors' => $doctorsCount,
+                'patients' => $patientsCount,
+                'appointments' => $appointmentsCount
+            ]);
 
-        $appointmentsCount = $this->appointmentModel->where('status' , 'booked')->countAllResults();
+        }
 
 
-         return $this->respond([
-            'doctors' => $doctorsCount,
-            'patients' => $patientsCount,
-            'appointments' => $appointmentsCount
-        ]);
+        $hospital_id = $this->request->hospital_id;
+        $doctorsCount = $this->userModel->where('role' , '1')
+                                        ->where('hospital_id' , $hospital_id)
+                                        ->countAllResults();
 
+        $patientsCount = $this->userModel->where('role' , '2')
+                                         ->where('hospital_id' , $hospital_id)
+                                         ->countAllResults();
+
+        $appointmentsCount = $this->appointmentModel->where('status' , 'booked')
+                                                    ->where('hospital_id' , $hospital_id)
+                                                    ->countAllResults();
+
+
+            return $this->respond([
+                'doctors' => $doctorsCount,
+                'patients' => $patientsCount,
+                'appointments' => $appointmentsCount
+            ]);
+
+
+        
     }catch(\Exception $e)
     {
         return $this->respond([
@@ -613,6 +695,7 @@ public function stats()
     }
 }
 
+// For - displaying patient profile in top left corner
 public function getDetailsforPatient()
 {
     try{
@@ -650,4 +733,6 @@ public function getDetailsforPatient()
        ]);
     }
 }
+
+
 }
