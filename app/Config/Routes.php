@@ -3,6 +3,7 @@
 use CodeIgniter\Router\RouteCollection;
 use App\Controllers\AdminController;
 use App\Controllers\AppointmentController;
+use App\Controllers\HospitalController;
 
 /**
  * @var RouteCollection $routes
@@ -15,6 +16,13 @@ $routes->post("login"  , "LoginController::login/$1");
 $routes->post("register"  , "LoginController::register");
 $routes->get('api/user/(:num)', 'AdminController::getUser/$1');
 $routes->post('api/update-profile', 'AdminController::updateProfile');
+
+
+$routes->group("hospital" , function($routes)
+{
+   $routes->get('list-all-Hospitals' , [HospitalController::class , 'listAllHospitals']);
+   $routes->get('get-Hospital-Info' , [HospitalController::class , 'gethospitalInfo']);
+});
 
 
 $routes->group("api" , ["namespace" => "App\Controllers", "filter" => "Auth" ] , function($routes){

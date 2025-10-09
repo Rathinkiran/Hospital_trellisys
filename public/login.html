@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="js/auth.js" defer></script>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #2f80ed, #56ccf2);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 15px;
+      width: 400px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      padding: 30px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    header h1 {
+      color: #2f80ed;
+      font-weight: 600;
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+    }
+
+    header p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .tab-link {
+      cursor: pointer;
+      padding: 10px 20px;
+      border-radius: 10px;
+      background: #eee;
+      margin: 0 5px;
+      font-weight: 500;
+      color: #555;
+      transition: background 0.3s;
+    }
+
+    .tab-link.active {
+      background: #2f80ed;
+      color: #fff;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #333;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .input-with-icon {
+      position: relative;
+    }
+
+    .input-with-icon i {
+      position: absolute;
+      top: 50%;
+      left: 12px;
+      transform: translateY(-50%);
+      color: #777;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 10px 10px 35px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      font-size: 0.95rem;
+    }
+
+    input:focus, select:focus {
+      border-color: #2f80ed;
+    }
+
+    button {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #2f80ed;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #256dd1;
+    }
+
+    .message {
+      display: none;
+      text-align: center;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+
+    .message.success {
+      color: #27ae60;
+    }
+
+    .message.error {
+      color: #e74c3c;
+    }
+
+    .note {
+      font-size: 0.85rem;
+      color: #777;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1 id="hospitalName">Welcome</h1>
+      <p>Your health is our priority</p>
+    </header>
+
+    <div class="tabs">
+      <div class="tab-link active" data-tab="loginTab">Login</div>
+      <div class="tab-link" data-tab="registerTab">Register</div>
+    </div>
+
+    <!-- Login Tab -->
+    <div class="tab-content active" id="loginTab">
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginRole">Role</label>
+          <div class="input-with-icon">
+            <i class="fas fa-user-tag"></i>
+            <select id="loginRole" name="role" required>
+              <option value="">Select Role</option>
+              <option value="2">Patient</option>
+              <option value="1">Doctor</option>
+              <option value="0">Admin</option>
+              <option value="3">SuperAdmin</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <div class="input-with-icon">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="loginEmail" name="email" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <div class="input-with-icon">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="loginPassword" name="password" required />
+          </div>
+        </div>
+
+        <button type="submit">Login</button>
+        <div class="message" id="loginMessage"></div>
+      </form>
+    </div>
+
+    <!-- Register Tab -->
+    <div class="tab-content" id="registerTab">
+      <form id="registerForm">
+        <div class="form-group">
+          <label for="regName">Full Name</label>
+          <div class="input-with-icon">
+            <i class="fas fa-user"></i>
+            <input type="text" id="regName" name="name" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regGender">Gender</label>
+          <div class="input-with-icon">
+            <i class="fas fa-venus-mars"></i>
+            <select id="regGender" name="gender" required>
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regEmail">Email</label>
+          <div class="input-with-icon">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="regEmail" name="email" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regPassword">Password</label>
+          <div class="input-with-icon">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="regPassword" name="password" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regPhone">Phone Number (Optional)</label>
+          <div class="input-with-icon">
+            <i class="fas fa-phone"></i>
+            <input type="text" id="regPhone" name="phone_no" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regProblem">Problem / Concern</label>
+          <div class="input-with-icon">
+            <i class="fas fa-stethoscope"></i>
+            <input type="text" id="regProblem" name="problem" required />
+          </div>
+        </div>
+
+        <button type="submit">Register</button>
+        <div class="message" id="registerMessage"></div>
+      </form>
+      <div class="note">
+        Already have an account? Click <strong>Login</strong> above.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
