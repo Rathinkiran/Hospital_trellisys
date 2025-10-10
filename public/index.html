@@ -3,59 +3,370 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Select Hospital</title>
+  <title>Hospital Management Login</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="js/hospital.js" defer></script>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
     body {
-      font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg, #2f80ed, #56ccf2);
+      background: linear-gradient(135deg, #1a6fc4 0%, #0d47a1 100%);
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      color: #fff;
-      margin: 0;
+      padding: 20px;
     }
-    h1 {
+
+    .login-container {
+      width: 100%;
+      max-width: 450px;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      padding: 40px 35px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: linear-gradient(to right, #1a6fc4, #0d47a1);
+    }
+
+    h2 {
+      color: #1a6fc4;
+      text-align: center;
       margin-bottom: 30px;
       font-weight: 600;
+      font-size: 28px;
+      position: relative;
+      padding-bottom: 15px;
     }
-    .hospital-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      justify-content: center;
+
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(to right, #1a6fc4, #0d47a1);
+      border-radius: 3px;
     }
-    .hospital-card {
-      background: white;
+
+    .form-group {
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
       color: #333;
-      padding: 20px;
-      border-radius: 10px;
-      width: 220px;
-      text-align: center;
+      font-size: 15px;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 14px 15px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      background-color: #f9f9f9;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: #1a6fc4;
+      box-shadow: 0 0 0 3px rgba(26, 111, 196, 0.1);
+      background-color: white;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(to right, #1a6fc4, #0d47a1);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: all 0.3s ease;
+      margin-top: 10px;
     }
-    .hospital-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(26, 111, 196, 0.4);
     }
-    .hospital-card h3 {
-      margin: 10px 0 5px;
+
+    .btn:active {
+      transform: translateY(0);
     }
-    .hospital-card p {
-      font-size: 0.9rem;
-      color: #666;
+
+    .error-msg {
+      color: #e53935;
+      text-align: center;
+      margin-top: 20px;
+      padding: 12px;
+      background-color: rgba(229, 57, 53, 0.1);
+      border-radius: 8px;
+      border-left: 4px solid #e53935;
+      display: none;
+      font-size: 14px;
+    }
+
+    .hospital-icon {
+      position: absolute;
+      right: 15px;
+      top: 40px;
+      color: #1a6fc4;
+    }
+
+    .role-icon {
+      position: absolute;
+      right: 15px;
+      top: 40px;
+      color: #1a6fc4;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 15px;
+      top: 40px;
+      color: #757575;
+      cursor: pointer;
+    }
+
+    .password-toggle:hover {
+      color: #1a6fc4;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 25px;
+      font-size: 14px;
+    }
+
+    .footer-links a {
+      color: #1a6fc4;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .footer-links a:hover {
+      text-decoration: underline;
+      color: #0d47a1;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 30px 25px;
+      }
+      
+      h2 {
+        font-size: 24px;
+      }
+      
+      .footer-links {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+      }
     }
   </style>
 </head>
+
 <body>
-  <h1>Select Your Hospital</h1>
-  <div class="hospital-list" id="hospitalList">
-    <!-- Filled dynamically -->
+  <div class="login-container">
+    <div class="login-card">
+      <h2>Hospital Management System</h2>
+      <form id="loginForm">
+        <!-- Role -->
+        <div class="form-group">
+          <label for="role">Select Role</label>
+          <select id="role" name="role" required>
+            <option value="">-- Select Role --</option>
+            <option value="3">Super Admin</option>
+            <option value="0">Admin</option>
+            <option value="1">Doctor</option>
+            <option value="2">Patient</option>
+          </select>
+          <i class="fas fa-user-md role-icon"></i>
+        </div>
+
+        <!-- Hospital -->
+        <div class="form-group" id="hospitalSection" style="display: none;">
+          <label for="hospital_id">Select Hospital</label>
+          <select id="hospital_id" name="hospital_id">
+            <option value="">-- Select Hospital --</option>
+          </select>
+          <i class="fas fa-hospital hospital-icon"></i>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required />
+          <i class="fas fa-envelope role-icon"></i>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required />
+          <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+        </div>
+
+        <button type="submit" class="btn">Login</button>
+      </form>
+
+      <div class="footer-links">
+        <a href="#">Forgot Password?</a>
+        <a href="#">Create New Account</a>
+        <a href="#">Help & Support</a>
+      </div>
+
+      <div id="errorMsg" class="error-msg"></div>
+    </div>
   </div>
+
+  <script>
+    $(document).ready(function() {
+      // Toggle password visibility
+      $('#togglePassword').click(function() {
+        const passwordInput = $('#password');
+        const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
+        passwordInput.attr('type', type);
+        $(this).toggleClass('fa-eye fa-eye-slash');
+      });
+
+      // Show/hide hospital selection based on role
+      $('#role').change(function() {
+        const role = $(this).val();
+        const hospitalSection = $('#hospitalSection');
+        
+        // Show hospital selection only for certain roles
+        if (role === '1' || role === '0') {
+          hospitalSection.slideDown(300);
+          
+          // Simulate loading hospitals (in a real app, this would be an API call)
+          if ($('#hospital_id option').length <= 1) {
+            $('#hospital_id').append('<option value="1">General Hospital</option>');
+            $('#hospital_id').append('<option value="2">City Medical Center</option>');
+            $('#hospital_id').append('<option value="3">Children\'s Hospital</option>');
+            $('#hospital_id').append('<option value="4">Community Clinic</option>');
+          }
+        } else {
+          hospitalSection.slideUp(300);
+        }
+      });
+
+      // Form submission
+      $('#loginForm').submit(function(e) {
+        e.preventDefault();
+        
+        const role = $('#role').val();
+        const email = $('#email').val();
+        const password = $('#password').val();
+        const hospitalId = $('#hospital_id').val();
+        
+        // Basic validation
+        if (!role) {
+          showError('Please select a role');
+          return;
+        }
+        
+        if ((role === '1' || role === '0') && !hospitalId) {
+          showError('Please select a hospital');
+          return;
+        }
+        
+        if (!email) {
+          showError('Please enter your email');
+          return;
+        }
+        
+        if (!password) {
+          showError('Please enter your password');
+          return;
+        }
+        
+        // Simulate login process
+        simulateLogin(role, email, password, hospitalId);
+      });
+      
+      function showError(message) {
+        $('#errorMsg').text(message).fadeIn(300);
+        setTimeout(() => {
+          $('#errorMsg').fadeOut(300);
+        }, 5000);
+      }
+      
+      function simulateLogin(role, email, password, hospitalId) {
+        // Show loading state
+        const btn = $('.btn');
+        const originalText = btn.text();
+        btn.html('<i class="fas fa-spinner fa-spin"></i> Authenticating...');
+        btn.prop('disabled', true);
+        
+        // Simulate API call delay
+        setTimeout(() => {
+          // Reset button
+          btn.html(originalText);
+          btn.prop('disabled', false);
+          
+          // For demo purposes, accept any login with password length > 3
+          if (password.length > 3) 
+          {
+            // Success - redirect based on role
+            const roleNames = {
+              '0': 'Admin',
+              '1': 'Doctor',
+              '2': 'Patient',
+              '3': 'Super Admin'
+            };
+            
+            alert(`Login successful! Welcome ${roleNames[role]}. Redirecting to dashboard...`);
+            // In a real application, you would redirect here
+            // window.location.href = `/dashboard?role=${role}`;
+          } else {
+            showError('Invalid credentials. Please try again.');
+          }
+        }, 1500);
+      }
+    });
+  </script>
 </body>
 </html>

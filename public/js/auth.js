@@ -1,107 +1,100 @@
 $(document).ready(function () {
-  const API_BASE = "http://localhost:8080";
-  const hospitalId = sessionStorage.getItem("selectedHospitalId");
+  const BASE_URL = "http://localhost:8080";
+  const tokenKey = "token";
+  const hospitalKey = "hospital_id";
+  const roleKey = "role";
 
-  // Fetch hospital name
-  if (hospitalId) {
-    $.ajax({
-      url: `${API_BASE}/hospital/get-Hospital-Info`,
-      method: "POST",
-      data: { hospital_id: hospitalId },
-      success: function (res) {
-        if (res.status) {
-          $("#hospitalName").text(`Welcome to ${res.data.name}`);
-        }
-      },
-    });
-  }
-
-  // Switch between tabs
-  $(".tab-link").on("click", function () {
-    $(".tab-link").removeClass("active");
-    $(this).addClass("active");
-    $(".tab-content").removeClass("active");
-    $("#" + $(this).data("tab")).addClass("active");
+  // Fetch hospital list on page load
+  $.ajax({
+    url: `${BASE_URL}/hospital/list-all-Hospitals`,
+    method: "GET",
+    success: function (res) {
+      if (res.status && Array.isArray(res.data)) {
+        res.data.forEach((hosp) => {
+          $("#hospital_id").append(
+            `<option value="${hosp.id}">${hosp.name}</option>`
+          );
+        });
+      }
+    },
+    error: function () {
+      console.error("Error fetching hospitals list");
+    },
   });
 
-  // Login handler
+  // Show/Hide hospital dropdown based on role
+  $("#role").on("change", function () {
+    const role = $(this).val();
+    if (role === "0" || role === "1") {
+      $("#hospitalSection").slideDown();
+    } else {
+      $("#hospitalSection").slideUp();
+      $("#hospital_id").val("");
+    }
+  });
+
+  // Handle Login
   $("#loginForm").on("submit", function (e) {
     e.preventDefault();
-    const email = $("#loginEmail").val();
-    const password = $("#loginPassword").val();
-    const role = $("#loginRole").val();
 
-    if (!role) {
-      showMessage("#loginMessage", "Please select a role", false);
+    const email = $("#email").val().trim();
+    const password = $("#password").val().trim();
+    const role = $("#role").val();
+    const hospital_id = $("#hospital_id").val();
+
+    if (!email || !password || !role) {
+      $("#errorMsg").text("Please fill all required fields.");
       return;
     }
 
-    const data = { email, password };
-
-    // Attach hospital_id for doctor/admin only
-    if (role === "0" || role === "1") {
-      data.hospital_id = hospitalId;
+    // For admin/doctor hospital selection is mandatory
+    if ((role === "0" || role === "1") && !hospital_id) {
+      $("#errorMsg").text("Please select a hospital.");
+      return;
     }
 
     $.ajax({
-      url: `${API_BASE}/login`,
+      url: `${BASE_URL}/login`,
       method: "POST",
-      data,
+      contentType: "application/json",
+      data: JSON.stringify({
+        email,
+        password,
+        role: parseInt(role),
+        hospital_id: hospital_id ? parseInt(hospital_id) : null,
+      }),
       success: function (res) {
-        if (res.status) {
-          sessionStorage.setItem("token", res.token);
-          sessionStorage.setItem("role", res.role);
-          sessionStorage.setItem("hospital_id", res.hospital_id || hospitalId);
-          sessionStorage.setItem("userName", res.userName);
+        if (res.status && res.token) {
+          sessionStorage.setItem(tokenKey, res.token);
+          sessionStorage.setItem(roleKey, role);
+          sessionStorage.setItem(hospitalKey, hospital_id || "");
 
-          showMessage("#loginMessage", "Login successful!", true);
-          setTimeout(() => (window.location.href = "dashboard.html"), 1000);
+          // Redirect based on role
+          switch (role) {
+            case "3":
+              window.location.href = "dashboard.html";
+              break;
+            case "0":
+              window.location.href = "dashboard.html";
+              break;
+            case "1":
+              window.location.href = "dashboard.html";
+              break;
+            case "2":
+              window.location.href = "dashboard.html";
+              break;
+            default:
+              window.location.href = "index.html";
+          }
         } else {
-          showMessage("#loginMessage", res.mssge || "Login failed", false);
+          $("#errorMsg").text(res.message || "Invalid credentials");
         }
       },
-      error: function () {
-        showMessage("#loginMessage", "Server error", false);
+      error: function (xhr) {
+        const message =
+          xhr.responseJSON?.message || "Error during login. Try again.";
+        $("#errorMsg").text(message);
       },
     });
   });
-
-  // Registration handler
-  $("#registerForm").on("submit", function (e) {
-    e.preventDefault();
-    const data = {
-      name: $("#regName").val(),
-      gender: $("#regGender").val(),
-      email: $("#regEmail").val(),
-      password: $("#regPassword").val(),
-      problem: $("#regProblem").val(),
-      phone_no: $("#regPhone").val() || null,
-    };
-
-    $.ajax({
-      url: `${API_BASE}/register`,
-      method: "POST",
-      data,
-      success: function (res) {
-        if (res.status) {
-          showMessage("#registerMessage", "Registered successfully!", true);
-        } else {
-          showMessage("#registerMessage", res.mssge || "Registration failed", false);
-        }
-      },
-      error: function () {
-        showMessage("#registerMessage", "Server error", false);
-      },
-    });
-  });
-
-  function showMessage(selector, text, success = true) {
-    const el = $(selector);
-    el.removeClass("success error")
-      .addClass(success ? "success" : "error")
-      .text(text)
-      .fadeIn()
-      .delay(2000)
-      .fadeOut();
-  }
 });

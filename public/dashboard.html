@@ -14,13 +14,11 @@
   --primary: #2a6bc9;
   --primary-dark: #1a56b4;
   --primary-light: #e8f2ff;
+  --accent: #ff6f61;
   --text: #2d3748;
   --white: #ffffff;
 }
-
-/* Layout & Reset */
-* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
-body { background: var(--primary-light); color: var(--text); overflow-x: hidden; }
+body { background: var(--primary-light); color: var(--text); overflow-x: hidden; font-family:'Poppins', sans-serif; }
 .dashboard { display:flex; min-height:100vh; }
 .sidebar { width:220px; background:var(--primary); color:var(--white); display:flex; flex-direction:column; position: fixed; height: 100vh; }
 .sidebar-header { padding:20px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.2); }
@@ -30,127 +28,46 @@ body { background: var(--primary-light); color: var(--text); overflow-x: hidden;
 .sidebar-menu li.hidden { display:none; }
 .main-content { flex-grow:1; padding:25px; background:#f7fafc; margin-left: 220px; width: calc(100% - 220px); }
 .dashboard-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; }
+.dashboard-header h1 { color: var(--primary-dark); font-weight:600; }
+.hospital-name { font-weight:600; color: var(--accent); font-size:1.2rem; margin-left: 10px; }
 .btn { padding:8px 15px; border:none; border-radius:5px; background:var(--primary); color:white; cursor:pointer; transition:0.2s; }
 .btn:hover { background:var(--primary-dark); }
 .stats-container { display:flex; flex-wrap:wrap; gap:20px; margin-bottom: 30px; }
 .stat-card { background:white; flex:1 1 250px; min-width:250px; padding:25px; border-radius:16px; box-shadow:0 15px 30px rgba(0,0,0,0.1); text-align:center; }
 .stat-card:hover { transform:translateY(-5px); box-shadow:0 20px 35px rgba(0,0,0,0.15); }
-.stat-card .icon { font-size:3rem; margin-bottom:15px; }
+.stat-card .icon { font-size:3rem; margin-bottom:15px; color: var(--accent);}
 .stat-card h3 { margin-bottom:10px; color:var(--primary); }
 .stat-card .number { font-size:2rem; font-weight:600; }
-
 #editProfileForm { display:none; background:white; padding:20px; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,0.1); margin-bottom:20px; }
 #editProfileForm label { display:block; margin-top:10px; }
 #editProfileForm input, #editProfileForm select { width:100%; padding:8px; margin-top:5px; }
 #editProfileForm button { margin-top:15px; }
-
-/* Patient Dashboard */
 #patientDashboardSection { display: none; }
-
-.patient-info-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-}
-
-.charts-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.chart-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-  height: 300px;
-}
-
-.chart-card canvas {
-  width: 100% !important;
-  height: 250px !important;
-}
-
-/* History Section */
-.history-container {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-  padding: 20px;
-  margin-bottom: 30px;
-}
-
-.history-container h3 {
-  color: var(--primary);
-  margin-bottom: 20px;
-  font-weight: 600;
-}
-
-.table th, .table td {
-  vertical-align: middle;
-  font-size: 0.95rem;
-}
-
-.table-striped > tbody > tr:nth-of-type(odd) {
-  background-color: #f9fbff;
-}
-
-.table-hover tbody tr:hover {
-  background-color: #e8f2ff;
-}
-
-.table-dark {
-  background-color: var(--primary) !important;
-}
-
-.badge {
-  background-color: #6c757d !important;
-  border-radius: 12px;
-  padding: 6px 12px;
-  font-size: 0.8rem;
-  text-transform: capitalize;
-}
-
-/* Back button */
-.back-to-dashboard {
-  background: #6c757d;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-bottom: 15px;
-}
-
-.back-to-dashboard:hover {
-  background: #5a6268;
-}
-
-/* Force all sidebar links to be white */
-.sidebar-menu a {
-  color: #ffffff !important;
-  text-decoration: none;
-  display: block;
-  width: 100%;
-}
-
-.sidebar-menu a:hover {
-  color: #e8f2ff !important;
-}
+.patient-info-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+.charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+.chart-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); height: 300px; }
+.chart-card canvas { width: 100% !important; height: 250px !important; }
+.history-container { background: #fff; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 30px; }
+.history-container h3 { color: var(--primary); margin-bottom: 20px; font-weight: 600; }
+.table th, .table td { vertical-align: middle; font-size: 0.95rem; }
+.table-striped > tbody > tr:nth-of-type(odd) { background-color: #f9fbff; }
+.table-hover tbody tr:hover { background-color: #e8f2ff; }
+.table-dark { background-color: var(--primary) !important; }
+.badge { background-color: #6c757d !important; border-radius: 12px; padding: 6px 12px; font-size: 0.8rem; text-transform: capitalize; }
+.back-to-dashboard { background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 15px; }
+.back-to-dashboard:hover { background: #5a6268; }
+.sidebar-menu a { color: #ffffff !important; text-decoration: none; display: block; width: 100%; }
+.sidebar-menu a:hover { color: #e8f2ff !important; }
 </style>
 </head>
 <body>
-
 <div class="dashboard">
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="sidebar-header">
-      <h2>ABC Hospital</h2>
+      <h2>Dashboard</h2>
       <p id="userWelcome"></p>
+      <span class="hospital-name" id="hospitalNameDisplay"></span>
     </div>
     <ul class="sidebar-menu">
       <li data-section="dashboard"><a href="#" class="menu-link">Dashboard</a></li>
@@ -161,6 +78,7 @@ body { background: var(--primary-light); color: var(--text); overflow-x: hidden;
       <li id="addDoctorMenu" class="hidden"><a href="addDoctor.html" class="menu-link">Add Doctor</a></li>
       <li id="addPatientMenu" class="hidden"><a href="addPatient.html" class="menu-link">Add Patient</a></li>
       <li id="showHistory" class="hidden"><a href="history.html" class="menu-link">History</a></li>
+      <li id="addHospitalMenu" class="hidden"><a href="addHospital.html" class="menu-link">Add Hospital</a></li>
     </ul>
   </div>
 
@@ -172,12 +90,6 @@ body { background: var(--primary-light); color: var(--text); overflow-x: hidden;
             <button id="editProfileBtn" class="btn">Edit Profile</button>
             <button id="logoutBtn" class="btn">Sign Out</button>
         </div>
-    </div>
-
-    <!-- Back button for patient viewing -->
-    <div id="viewingPatientHeader" style="display:none;">
-      <button class="back-to-dashboard" id="backToDashboardBtn">← Back to My Dashboard</button>
-      <h3 id="viewingPatientTitle" style="color: var(--primary); margin: 10px 0;"></h3>
     </div>
 
     <!-- Edit Profile Form -->
@@ -195,54 +107,6 @@ body { background: var(--primary-light); color: var(--text); overflow-x: hidden;
       <button type="submit" class="btn">Save</button>
       <button type="button" id="cancelEditProfile" class="btn" style="background:#e53e3e;">Cancel</button>
     </form>
-
-    <!-- Dashboard Stats for Patient -->
-    <div id="patientDashboardSection">
-      <!-- Basic Info -->
-      <div class="patient-info-card">
-        <h2 id="patientInfoTitle">My Details</h2>
-        <p><strong>Name:</strong> <span id="pName">-</span></p>
-        <p><strong>Email:</strong> <span id="pEmail">-</span></p>
-        <p><strong>Gender:</strong> <span id="pGender">-</span></p>
-        <p><strong>DOB:</strong> <span id="pDOB">-</span></p>
-        <img id="pPhoto" src="" alt="Profile" style="width:100px; border-radius:50%; margin-top:10px;">
-      </div>
-
-      <!-- Graphs -->
-      <div class="charts-container">
-        <div class="chart-card">
-          <h3>Weight Trend</h3>
-          <canvas id="weightChart"></canvas>
-        </div>
-        <div class="chart-card">
-          <h3>Blood Pressure Trend</h3>
-          <canvas id="bpChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Past Appointments -->
-      <div class="history-container">
-        <h3 id="historyTitle">History</h3>
-        <div class="table-responsive">
-          <table class="table table-bordered table-hover table-striped">
-            <thead class="table-dark">
-              <tr>
-                <th>ID</th>
-                <th>Doctor</th>
-                <th>Patient</th>
-                <th>Booked Date</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="historyTableBody">
-              <!-- Filled dynamically -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
 
     <!-- Dashboard Stats -->
     <div id="dashboardSection">
@@ -264,12 +128,53 @@ body { background: var(--primary-light); color: var(--text); overflow-x: hidden;
         </div>
       </div>
     </div>
+
+    <!-- Patient Dashboard Section -->
+    <div id="patientDashboardSection">
+      <div class="patient-info-card">
+        <h2 id="patientInfoTitle">My Details</h2>
+        <p><strong>Name:</strong> <span id="pName">-</span></p>
+        <p><strong>Email:</strong> <span id="pEmail">-</span></p>
+        <p><strong>Gender:</strong> <span id="pGender">-</span></p>
+        <p><strong>DOB:</strong> <span id="pDOB">-</span></p>
+        <img id="pPhoto" src="" alt="Profile" style="width:100px; border-radius:50%; margin-top:10px;">
+      </div>
+
+      <div class="charts-container">
+        <div class="chart-card">
+          <h3>Weight Trend</h3>
+          <canvas id="weightChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Blood Pressure Trend</h3>
+          <canvas id="bpChart"></canvas>
+        </div>
+      </div>
+
+      <div class="history-container">
+        <h3 id="historyTitle">History</h3>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover table-striped">
+            <thead class="table-dark">
+              <tr>
+                <th>ID</th>
+                <th>Doctor</th>
+                <th>Patient</th>
+                <th>Hospital</th>
+                <th>Booked Date</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script src="js/dashboard.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
 </body>
 </html>

@@ -36,6 +36,9 @@ class LoginController extends ResourceController
             ],
             "problem" => [
                 "rules" => "required",
+            ],
+            "phone_no" => [
+                "rules" => "required"
             ]
             ];
 
@@ -83,6 +86,9 @@ class LoginController extends ResourceController
         ],
         "password" => [
             "rules" => "required|min_length[3]|"
+        ],
+        "role" => [
+            "rules" => "required"
         ]
      ];
 
@@ -97,10 +103,12 @@ class LoginController extends ResourceController
 
      $email = $this->request->getVar('email');
      $password = $this->request->getVar('password');
+     $role = $this->request->getVar('role');
 
      // Verifying whether the user exist in DB
      $user = $this->userModel->where("email" , $email)
                              ->where("password" , $password)
+                             ->where("role" , $role)
                              ->first();
      
 
@@ -142,7 +150,7 @@ class LoginController extends ResourceController
                     "token" => $token,
                     "role" => $user["role"],
                     "userName" => $user['name'],
-                    "hospital_id" => $user['hospital_id']
+                    "hospital_id" => $user['hospital_id'] ?? null,
                 ]);
 
    }
