@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Hospital - SuperAdmin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      background: white;
+      margin: 60px auto;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2a6bc9;
+      margin-bottom: 25px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 500;
+      color: #333;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    .btn-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 25px;
+    }
+    .btn-primary {
+      background: #2a6bc9;
+      color: white;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-primary:hover { background: #1a56b4; }
+    .btn-secondary {
+      background: #e53e3e;
+      color: white;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-secondary:hover { background: #c53030; }
+
+    .error-msg {
+      color: #e53e3e;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .success-msg {
+      color: #38a169;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Add Hospital</h1>
+
+    <form id="addHospitalForm">
+      <label for="name">Hospital Name</label>
+      <input type="text" id="name" placeholder="Enter hospital name" required>
+
+      <label for="address">Address</label>
+      <input type="text" id="address" placeholder="Enter hospital address" required>
+
+      <label for="contact_no">Contact Number</label>
+      <input type="text" id="contact_no" placeholder="Enter contact number" required>
+
+      <label for="code">Hospital Code</label>
+      <input type="text" id="code" placeholder="Nickname" required>
+
+      <div class="btn-row">
+        <button type="button" id="backBtn" class="btn-secondary">Back</button>
+        <button type="submit" class="btn-primary">Add Hospital</button>
+      </div>
+    </form>
+
+    <div id="message"></div>
+  </div>
+
+  <script src="js/addHospital.js"></script>
+</body>
+</html>

@@ -24,6 +24,138 @@ class AdminController extends ResourceController
         $this->db = db_connect();
     }
 
+    public function addAdmin()
+    {
+       try{
+        $validationRules = [
+            "name" => [
+                "rules" => "required"
+            ],
+            "email" => [
+                "rules" => "required"
+            ],
+            "password" => [
+                "rules" => "required"
+            ],
+            "phone_no" => [
+                "rules" => "required"
+            ],
+        ];
+
+        if(!$this->validate($validationRules))
+        {
+            return $this->respond([
+                "status" => false,
+                "Mssge" => $this->validator->getErrors()
+            ]);
+        }
+
+         $userRole = $this->request->role;
+
+         if($userRole !== "3")
+         {
+            return $this->respond([
+                "status" => false,
+                "Mssge" => "Oly SuperAdmins can add Admins"
+            ]);
+         }
+
+         $name = $this->request->getVar("name");
+         $email = $this->request->getVar("email");
+         $password = $this->request->getVar("password");
+         $hospital_id = $this->request->getVar("hospital_id");
+         $phone_no = $this->request->getVar("phone_no");
+         $gender = $this->request->getVar("gender");
+         
+
+         $data = [
+            "name" => $name,
+            "email" => $email,
+            "password" => $password,
+            "hospital_id" => $hospital_id,
+            "gender" => $gender,
+            "phone_no" => $phone_no,
+            "role" => "0"
+         ];
+           
+        //  print_r($data);
+        //  die;
+         $result = $this->userModel->insert($data);
+
+         if($result)
+         {
+            return $this->respond([
+                "status" => true,
+                "Mssge" => "Successfully Added Admin"
+            ]);
+         }
+
+
+       }catch(\Exception $e)
+       {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage()
+        ]);
+       }
+    }
+
+    public function addHospital()
+    {
+        try {
+           $validationRules = [
+            "name" => [
+                "rules" => "required"
+            ],
+            "address" => [
+                "rules" => "required"
+            ],
+            "contact_no" => [
+                "rules" => "required"
+            ],
+            "code" => [
+                "rules" => "required"
+            ]
+            ];
+
+
+            if(!$this->validate($validationRules))
+            {
+                return $this->respond([
+                    "status" => false,
+                    "Mssge" => $this->validator->getErrors()
+                ]);
+            }
+
+            $name = $this->request->getVar("name");
+            $address = $this->request->getVar("address");
+            $contact_no = $this->request->getVar("contact_no");
+            $code = $this->request->getVar("code");
+
+            $data = [
+                "name" => $name,
+                "address" => $address,
+                "contact_no" => $contact_no,
+                "code" => $code
+            ];
+
+            $result = $this->hospitalModel->insert($data);
+
+            if($result)
+            {
+                return $this->respond([
+                    "status" => true,
+                    "Mssge" => "Successfully added the hospital"
+                ]);
+            }
+        }catch(\Exception $e)
+        {
+            return $this->respond([
+                "status" => false,
+                "Error" => $e->getMessage()
+            ]);
+        }
+    }
 
     public function addDoctor()
     { 
@@ -171,6 +303,67 @@ class AdminController extends ResourceController
             ]);
     }
 
+    public function ListAdmins()
+    {
+      try{
+        $hospital_id = $this->request->getVar("hospital_id");
+
+        $builder = $this->userModel->select("users.* , hospital.name as HospitalName")
+                                   ->where("users.role" , "0")
+                                   ->join("hospitals as hospital" , "hospital.id = users.hospital_id")
+                                   ->where("users.isDeleted" , "0");
+        //hospital wise Filter
+        if(!empty($hospital_id))
+        {
+          $builder = $builder->where("users.hospital_id" , $hospital_id);
+        }
+
+        $data = $builder->findAll();
+
+        return $this->respond([
+            "status" => true,
+            "Mssge" => "Successfully fetched the Admins list",
+            "data" => $data
+        ]);
+      }catch(\Exception $e)
+      {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage()
+        ]);
+      }
+    }
+
+    public function ListAdminsHospitalWise()
+    {
+      try{
+        $hospital_id = $this->request->getVar("hospital_id");
+
+        $builder = $this->userModel->select("users.* , hospital.name as HospitalName")
+                                   ->where("users.role" , "0")
+                                   ->join("hospitals as hospital" , "hospital.id = users.hospital_id")
+                                   ->where("users.isDeleted" , "0");
+       
+          $builder = $builder->where("users.hospital_id" , $hospital_id);
+        
+
+        $data = $builder->findAll();
+
+        return $this->respond([
+            "status" => true,
+            "Mssge" => "Successfully fetched the Admins list",
+            "data" => $data
+        ]);
+      }catch(\Exception $e)
+      {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage()
+        ]);
+      }
+    }
+
+
     public function ListDoctors()
     {
        $data = $this->userModel->where("role" , "1")->findAll();
@@ -193,18 +386,55 @@ class AdminController extends ResourceController
 
     }
 
+    public function ListDoctorsforSuperAdmins()
+    {
+        $hospital_id = $this->request->getVar("hospital_id");
+
+        $builder = $this->userModel
+                        ->select("users.* , hospital.name as HospitalName")
+                        ->where("users.role" , "1")
+                        ->join("hospitals as hospital" , "hospital.id = users.hospital_id" , "left")
+                        ->where("users.isDeleted" , "0");
+
+       //hospital filter
+       if(!empty($hospital_id))
+       {
+          $builder = $builder->where("users.hospital_id" , $hospital_id);
+                             
+       }
+       
+       $data = $builder->findAll();
+
+        if($data)
+        {
+            return $this->respond([
+            "status" => true,
+            "mssge" => "Fetched all the doctors data successfully",
+            "data" => $data,
+            ]);
+        }else{
+             return $this->respond([
+            "status" => false,
+            "mssge" => "Could not fetch the data"
+            ]);
+        }
+
+
+    }
+
     public function ListDoctorsHospitalwise()
     {
         //Shld do some checks
         $userRole = $this->request->role;
-        
+        $hospital_id = $this->request->getVar("hospital_id");
         //for Admin - using hospital_id from his token
-        $hospital_id = $this->request->hospital_id; 
+        
 
         if(!$hospital_id)
         {
             //for SuperAdmin
-            $hospital_id = $this->request->getVar("hospital_id");
+            $hospital_id = $this->request->hospital_id; 
+            
         }
 
         // $data = $this->userModel->where("role" , "1")
@@ -252,6 +482,7 @@ class AdminController extends ResourceController
                                                  users.*")
                                        ->where("appointments.hospital_id" , $hospital_id)
                                        ->join("users as users" , "users.id=appointments.patient_id")
+                                       ->groupBy("users.id")
                                        ->findAll(); // role : 0 => oly list Doctors
 
 
@@ -304,6 +535,52 @@ class AdminController extends ResourceController
         
     }
 
+    public function ListPatientsforSuperAdmin()
+    {
+        //Shld do some checks
+        try{
+          
+        $hospital_id = $this->request->getVar("hospital_id");
+
+        $builder = $this->userModel
+                        ->select("users.*")
+                        ->where("users.role" , "2")
+                        ->where("users.isDeleted" , "0"); // role : 0 => oly list Doctors
+
+        if(!empty($hospital_id))
+        {
+            $builder = $builder
+                       ->join("appointments" , "appointments.patient_id = users.id" , "inner")
+                       ->where("appointments.hospital_id" , $hospital_id)
+                       ->groupBy("users.id");
+        }
+
+        $data = $builder->findAll();
+
+
+        if($data)
+        {
+            return $this->respond([
+            "status" => true,
+            "mssge" => "Fetched all the Patients data successfully",
+            "data" => $data,
+            ]);
+        }else{
+             return $this->respond([
+            "status" => false,
+            "mssge" => "Could not fetch the data"
+            ]);
+        }
+        }catch(\Exception $e)
+        {
+            return $this->respond([
+                "status" => false,
+                "Error" => $e->getMessage()
+            ]);
+        }
+
+        
+    }
 
     public function editDoctors()
     {
@@ -651,6 +928,7 @@ public function stats()
         {
             $doctorsCount = $this->userModel->where('role' , '1')->countAllResults();
             $patientsCount = $this->userModel->where('role' , '2')->countAllResults();
+            $hospitalsCount = $this->hospitalModel->countAllResults();
 
             $appointmentsCount = $this->appointmentModel->where('status' , 'booked')->countAllResults();
 
@@ -658,7 +936,8 @@ public function stats()
             return $this->respond([
                 'doctors' => $doctorsCount,
                 'patients' => $patientsCount,
-                'appointments' => $appointmentsCount
+                'appointments' => $appointmentsCount,
+                'hospitals'    => $hospitalsCount
             ]);
 
         }
@@ -669,9 +948,16 @@ public function stats()
                                         ->where('hospital_id' , $hospital_id)
                                         ->countAllResults();
 
-        $patientsCount = $this->userModel->where('role' , '2')
-                                         ->where('hospital_id' , $hospital_id)
-                                         ->countAllResults();
+        
+
+        $query = $this->db->table('appointments')
+            ->select('COUNT(DISTINCT patient_id) AS total_patients')
+            ->where('hospital_id', $hospital_id)
+            ->get()
+            ->getRow();
+
+        $patientsCount = (int) $query->total_patients;
+
 
         $appointmentsCount = $this->appointmentModel->where('status' , 'booked')
                                                     ->where('hospital_id' , $hospital_id)
@@ -694,6 +980,8 @@ public function stats()
         ]);
     }
 }
+
+
 
 // For - displaying patient profile in top left corner
 public function getDetailsforPatient()

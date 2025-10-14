@@ -16,6 +16,7 @@ class HospitalController extends ResourceController
         $this->hospitalModel = new HospitalsModel();
     }
 
+    
   public function listAllHospitals()
   {
     try 
@@ -43,22 +44,11 @@ class HospitalController extends ResourceController
    public function gethospitalInfo()
     {
         try{
-
-            $validationRules = [
-                "hospital_id" => [
-                    "rules" => "required"
-                ]
-                ];
-
-            if(!$this->validate($validationRules))
+            $hospital_id = $this->request->hospital_id;
+            if(!$hospital_id)
             {
-                return $this->respond([
-                    "status" => false,
-                    "Mssge" => $this->validator->getErrors()
-                ]);
+                $hospital_id = $this->request->getVar("hospital_id");
             }
-
-            $hospital_id = $this->request->getVar("hospital_id");
 
             $data = $this->hospitalModel->find($hospital_id);
 

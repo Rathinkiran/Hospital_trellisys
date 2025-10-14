@@ -18,7 +18,7 @@ $routes->get('api/user/(:num)', 'AdminController::getUser/$1');
 $routes->post('api/update-profile', 'AdminController::updateProfile');
 
 
-$routes->group("hospital" , function($routes)
+$routes->group("hospital" ,["namespace" => "namespace App\Controllers" , "filter" => "Auth"] ,  function($routes)
 {
    $routes->get('list-all-Hospitals' , [HospitalController::class , 'listAllHospitals']);
    $routes->get('get-Hospital-Info' , [HospitalController::class , 'gethospitalInfo']);
@@ -42,10 +42,16 @@ $routes->group("api" , ["namespace" => "App\Controllers", "filter" => "Auth" ] ,
     });
 
     // Routes for all authenticated users
+    $routes->post('add-Admins', [AdminController::class, 'addAdmin']);
+    $routes->post('add-Hospital', [AdminController::class, 'addHospital']);
     $routes->post('Edit-Patient', [AdminController::class, 'editPatient']);
+    $routes->get('list-Admins', [AdminController::class, 'ListAdmins']);
+    $routes->get('list-Admins-HospitalWise', [AdminController::class, 'ListAdminsHospitalWise']);
     $routes->get('list-Doctors', [AdminController::class, 'listDoctors']);
+    $routes->get('list-Doctors-for-SuperAdmin', [AdminController::class, 'ListDoctorsforSuperAdmins']);
     $routes->get('list-Doctors-Hospital-Wise', [AdminController::class, 'ListDoctorsHospitalwise']);
     $routes->get('list-Patients', [AdminController::class, 'listPatients']);
+    $routes->get('list-Patients-for-SuperAdmin', [AdminController::class, 'ListPatientsforSuperAdmin']);
     $routes->get('list-Patients-Hospital-Wise', [AdminController::class, 'ListPatientsHospitalWise']);
     $routes->get('dashboard/stats' , [AdminController::class , 'stats']);
 });
@@ -64,8 +70,10 @@ $routes->group("appointment" , ["namespace" => "App\Controllers" , "filter" => "
     });
 
     
-    $routes->get('List-appointments', [AppointmentController::class, 'listAppointment']);
+    $routes->get('List-appointments-for-Doctors-and-Admins', [AppointmentController::class, 'ListAppointmentforDoctorsandAdmins']);
     $routes->get('List-appointments-for-Patients', [AppointmentController::class, 'ListAppointmentforPatients']);
+    $routes->get('List-appointments-for-SuperAdmins', [AppointmentController::class, 'ListAppointmentforSuperAdmins']);
+    $routes->get('List-appointments-HospitalWise', [AppointmentController::class, 'ListAppointmentHospitalWise']);
     $routes->get('show-History' , [AppointmentController::class , 'showHistory']);
     $routes->get('getDetailsforPatient' , [AdminController::class , 'getDetailsforPatient']);
     $routes->get('getPatientStats' , [AppointmentController::class , 'getPatientStats']);

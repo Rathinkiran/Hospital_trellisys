@@ -40,6 +40,21 @@
 .btn-back { background:#e53e3e; color:white; }
 .btn-back:hover { background:#c53030; }
 
+/* Filter Row */
+.filter-row {
+  display: none; /* only for SuperAdmin */
+  margin-bottom: 15px;
+}
+.filter-row label {
+  font-weight: 500;
+  margin-right: 10px;
+}
+.filter-row select {
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
 /* Table */
 .table { width: 100%; border-collapse: collapse; }
 .table th, .table td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
@@ -77,6 +92,14 @@
       <button id="backBtn" class="btn-primary btn-back">Back</button>
       <button id="addPatientBtn" class="btn-primary">Add Patient</button>
     </div>
+  </div>
+
+  <!-- Hospital Filter (only for SuperAdmin) -->
+  <div class="filter-row" id="hospitalFilterRow">
+    <label for="filterHospital">Filter by Hospital:</label>
+    <select id="filterHospital">
+      <option value="">All Hospitals</option>
+    </select>
   </div>
 
   <div class="table-responsive">

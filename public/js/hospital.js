@@ -1,34 +1,98 @@
 $(document).ready(function () {
-  const API_BASE = "http://localhost:8080";
+  const token = localStorage.getItem("token");
 
-  $.ajax({
-    url: `${API_BASE}/hospital/list-all-Hospitals`,
-    method: "GET",
-    success: function (res) {
-      if (res.status && res.data.length) {
-        const list = $("#hospitalList");
-        list.empty();
-        res.data.forEach(hosp => {
-          const card = `
-            <div class="hospital-card" data-id="${hosp.id}">
-              <i class="fa-solid fa-hospital fa-2x"></i>
-              <h3>${hosp.name}</h3>
-              <p>${hosp.address}</p>
-            </div>`;
-          list.append(card);
-        });
-
-        $(".hospital-card").on("click", function () {
-          const hospitalId = $(this).data("id");
-          // Store hospital_id in sessionStorage
-          sessionStorage.setItem("selectedHospitalId", hospitalId);
-          window.location.href = `login.html?hospital_id=${hospitalId}`;
-        });
-      }
-    },
-    error: function (err) {
-      console.error("Failed to load hospitals:", err);
-      alert("Unable to load hospital list");
-    }
+  // Back button → dashboard.html
+  $("#backBtn").click(function () {
+    window.location.href = "dashboard.html";
   });
+
+  // Load all hospitals
+  function loadHospitals() {
+    $.ajax({
+      url: "http://localhost:8080/hospital/list-all-Hospitals",
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+      success: function (res) {
+        if (res.status && res.data.length > 0) {
+          renderHospitals(res.data);
+        } else {
+          $("#hospitalsContainer").html(
+            `<p style="color:red;">No hospitals found.</p>`
+          );
+        }
+      },
+      error: function (err) {
+        console.error(err);
+        $("#hospitalsContainer").html(
+          `<p style="color:red;">Error fetching hospitals.</p>`
+        );
+      },
+    });
+  }
+
+  // Render hospital cards
+  function renderHospitals(hospitals) {
+    $("#hospitalsContainer").empty();
+    hospitals.forEach((hospital) => {
+      const card = $(`
+        <div class="hospital-card" data-id="${hospital.id}">
+          <div class="hospital-name">${hospital.name}</div>
+          <div class="hospital-details">Address: ${
+            hospital.address || "N/A"
+          }</div>
+
+          <div class="options">
+            <button class="option-btn doctors-btn">👨‍⚕️ Doctors</button>
+            <button class="option-btn patients-btn">🧍 Patients</button>
+            <button class="option-btn admins-btn">🧑‍💼 Admins</button>
+            <button class="option-btn appointments-btn">📅 Appointments</button>
+          </div>
+        </div>
+      `);
+
+      // Expand / collapse on click
+      card.click(function () {
+        const isExpanded = $(this).hasClass("hospital-expanded");
+        $(".hospital-card").removeClass("hospital-expanded");
+        $(".options").slideUp();
+
+        if (!isExpanded) {
+          $(this).addClass("hospital-expanded");
+          $(this).find(".options").slideDown();
+        }
+      });
+
+      // Navigation buttons
+      card.find(".doctors-btn").click(function (e) {
+        e.stopPropagation();
+        redirectTo("doctors.html", hospital.id);
+      });
+
+      card.find(".patients-btn").click(function (e) {
+        e.stopPropagation();
+        redirectTo("patients.html", hospital.id);
+      });
+
+      card.find(".admins-btn").click(function (e) {
+        e.stopPropagation();
+        redirectTo("admins.html", hospital.id);
+      });
+
+      card.find(".appointments-btn").click(function (e) {
+        e.stopPropagation();
+        redirectTo("appointments.html", hospital.id);
+      });
+
+      $("#hospitalsContainer").append(card);
+    });
+  }
+
+  // Redirect function
+  function redirectTo(page, hospitalId) {
+    localStorage.setItem("selectedHospitalId", hospitalId);
+    window.location.href = page;
+  }
+
+  // Initial load
+  loadHospitals();
 });

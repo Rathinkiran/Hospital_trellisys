@@ -40,6 +40,21 @@
 .btn-back { background:#e53e3e; color:white; }
 .btn-back:hover { background:#c53030; }
 
+/* Filter Row */
+.filter-row {
+  display: none; /* only visible for SuperAdmin */
+  margin-bottom: 15px;
+}
+.filter-row label {
+  font-weight: 500;
+  margin-right: 10px;
+}
+.filter-row select {
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
 /* Table */
 .table { width: 100%; border-collapse: collapse; }
 .table th, .table td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
@@ -79,14 +94,23 @@
     </div>
   </div>
 
+  <!-- Hospital Filter (Visible only for SuperAdmin) -->
+  <div class="filter-row" id="hospitalFilterRow">
+    <label for="filterHospital">Filter by Hospital:</label>
+    <select id="filterHospital">
+      <option value="">All Hospitals</option>
+    </select>
+  </div>
+
   <div class="table-responsive">
     <table id="doctorsTable" class="table">
       <thead>
-        <tr>
+        <tr id="doctorsHeader">
           <th>Name</th>
           <th>Gender</th>
           <th>Expertise</th>
           <th>Email</th>
+          <th id="hospitalHeader" style="display:none;">Hospital</th>
           <th>Actions</th>
         </tr>
       </thead>

@@ -3,13 +3,32 @@ $(document).ready(function () {
   const role = localStorage.getItem("role") || "2"; // 0=Admin,1=Doctor,2=Patient
   if (!token) { window.location.href = "index.html"; return; }
 
+  // Show hospital filter for patient & superAdmin
+  if(role === "2" || role === "3") {
+    $("#filterHospital").show();
+    // Fetch all hospitals
+    $.ajax({
+      url: "http://localhost:8080/hospital/list-all-Hospitals",
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+      success: function(res) {
+        if(res.status && res.data) {
+          res.data.forEach(h => {
+            $("#filterHospital").append(`<option value="${h.id}">${h.name}</option>`);
+          });
+        }
+      },
+      error: function(){ console.error("Failed to fetch hospitals"); }
+    });
+  }
+
   // Setup table headers based on role
-  if (role === "2") 
-  {
+  if (role === "2") {
     $("#appointmentsHeader").html(`
       <th>ID</th>
       <th>Doctor</th>
       <th>Patient</th>
+      <th>Hospital</th>
       <th>Date</th>
       <th>Start Time</th>
       <th>End Time</th>
@@ -20,6 +39,7 @@ $(document).ready(function () {
       <th>ID</th>
       <th>Doctor</th>
       <th>Patient</th>
+      <th>Hospital</th>
       <th>Date</th>
       <th>Start Time</th>
       <th>End Time</th>
@@ -58,6 +78,7 @@ $(document).ready(function () {
     const filterStatus = $("#filterStatus").val();
     const filterRange = $("#filterRange").val();
     const filterAppointmentId = $("#filterAppointmentId").val().trim();
+    const filterHospital = $("#filterHospital").val();
 
     let query = [];
     if (search) query.push(`search=${encodeURIComponent(search)}`);
@@ -65,9 +86,16 @@ $(document).ready(function () {
     if (filterStatus) query.push(`status=${filterStatus}`);
     if (filterRange) query.push(`dateFilter=${filterRange}`);
     if (filterAppointmentId) query.push(`appointmentId=${filterAppointmentId}`);
+    if (filterHospital) query.push(`hospital_id=${filterHospital}`);
+
+    let apiUrl = "http://localhost:8080/appointment/";
+    if(role === "2") apiUrl += "List-appointments-for-Patients";
+    else if(role === "3") apiUrl += "List-appointments-for-SuperAdmins";
+    else if(role === "1" || role === "0") apiUrl += "List-appointments-for-Doctors-and-Admins";
+    else apiUrl += "List-appointments-for-Doctors-and-Admins";
 
     $.ajax({
-      url: `http://localhost:8080/appointment/List-appointments${query.length ? "?" + query.join("&") : ""}`,
+      url: `${apiUrl}${query.length ? "?" + query.join("&") : ""}`,
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
       success: function (res) {
@@ -87,6 +115,7 @@ $(document).ready(function () {
                 <td>${a.id}</td>
                 <td>${escapeHtml(a.DoctorName || '')}</td>
                 <td>${escapeHtml(a.PatientName || '')}</td>
+                <td>${escapeHtml(a.HospitalName || '')}</td>
                 <td>${a.Appointment_date || ''}</td>
                 <td>${start12}</td>
                 <td>${end12}</td>
@@ -104,7 +133,7 @@ $(document).ready(function () {
                   <button class="btn-cancel" data-id="${a.id}">Cancel</button>
                   <button class="btn-history" data-patient-id="${a.patient_id}" data-patient-name="${escapeHtml(a.PatientName || '')}">Show Patient History</button>
                 `;
-                console.log("The patient id is " , a.patient_id);              }
+              }
               row += `<td class="actions">${actionButtons}</td>`;
             }
 
@@ -112,18 +141,14 @@ $(document).ready(function () {
             tbody.append(row);
           });
         } else {
-          tbody.append(`<tr><td colspan="${role==='2' ? 7 : 8}" style="text-align:center;">No appointments found</td></tr>`);
+          tbody.append(`<tr><td colspan="${role==='2' ? 8 : 9}" style="text-align:center;">No appointments found</td></tr>`);
         }
       },
-      error: function (xhr) {
-        alert("Failed to load appointments.");
-        console.error(xhr);
-      }
+      error: function (xhr) { alert("Failed to load appointments."); console.error(xhr); }
     });
   }
 
-  $("#searchBox, #filterDate, #filterStatus, #filterRange, #filterAppointmentId").on("input change", loadAppointments);
-
+  $("#searchBox, #filterDate, #filterStatus, #filterRange, #filterAppointmentId, #filterHospital").on("input change", loadAppointments);
   loadAppointments();
 
   // ---------- COMPLETE ----------
@@ -176,7 +201,7 @@ $(document).ready(function () {
       data: { appointmentId: id },
       success: function(res){ 
         if(res.status){ alert("Appointment cancelled."); loadAppointments(); }
-        else { alert(res.Mssge || "Failed to cancel"); }
+        else { alert(res.Mssge || "Failed"); }
       },
       error: function(xhr){ alert("Failed to cancel appointment. "+xhr.responseText); }
     });
@@ -184,22 +209,12 @@ $(document).ready(function () {
 
   // ---------- SHOW PATIENT HISTORY ----------
   $(document).on("click", ".btn-history", function () {
-    const patientId = $(this).data("patient-id");  // ✅ Change to kebab-case
+    const patientId = $(this).data("patient-id");
     const patientName = $(this).data("patient-name");
-    console.log("patientId is " , patientId);
-    console.log("patientName is " , patientName);
-    
-    if (!patientId) {
-      alert("Patient ID not available");
-      return;
-    }
-    
-    // Store patient info in localStorage to use on dashboard
+    if (!patientId) { alert("Patient ID not available"); return; }
     localStorage.setItem("viewingPatientId", patientId);
     localStorage.setItem("viewingPatientName", patientName);
     localStorage.setItem("isViewingPatient", "true");
-    
-    // Redirect to dashboard which will show patient history
     window.location.href = "dashboard.html";
   });
 
@@ -213,12 +228,16 @@ $(document).ready(function () {
     const filterStatus = $("#filterStatus").val();
     const filterRange = $("#filterRange").val();
     const filterAppointmentId = $("#filterAppointmentId").val().trim();
+    const filterHospital = $("#filterHospital").val();
+
     let query = [];
     if (search) query.push(`search=${encodeURIComponent(search)}`);
     if (filterDate) query.push(`date=${filterDate}`);
     if (filterStatus) query.push(`status=${filterStatus}`);
     if (filterRange) query.push(`dateFilter=${filterRange}`);
     if (filterAppointmentId) query.push(`appointmentId=${filterAppointmentId}`);
+    if (filterHospital) query.push(`hospital_id=${filterHospital}`);
+
     const url = `http://localhost:8080/appointment/export-csv${query.length ? "?" + query.join("&") : ""}`;
     $.ajax({
       url: url,
