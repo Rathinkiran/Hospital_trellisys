@@ -45,7 +45,7 @@
   </style>
 </head>
 <body>
-  <button class="back-btn" onclick="window.location.href='http://localhost:8080/dashboard.html'">← Back</button>
+  <button class="back-btn" id="backBtn">← Back</button>
   <h2>Appointments</h2>
 
   <div class="top-bar">
@@ -67,7 +67,7 @@
           <option value="this_week">This Week</option>
           <option value="last_month">Last Month</option>
         </select>
-        <!-- Hospital filter (only for patient & superAdmin) -->
+        <!-- Hospital filter (visible for Patient & SuperAdmin) -->
         <select id="filterHospital" style="display:none;">
           <option value="">All Hospitals</option>
         </select>

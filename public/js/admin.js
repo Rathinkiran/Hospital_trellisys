@@ -8,9 +8,15 @@ $(document).ready(function () {
 
   const hospitalFilter = $("#hospitalFilter");
   const adminsTableBody = $("#adminsTableBody");
+  const selectedHospitalId = localStorage.getItem("selectedHospitalId") || "";
+
+  // 🔙 Back Button
+  $("#backBtn").on("click", function () {
+    window.location.href = "dashboard.html";
+  });
 
   // ✅ Fetch Hospitals for Filter
-  function fetchHospitals() {
+  function fetchHospitals(preselectId = "") {
     $.ajax({
       url: "http://localhost:8080/hospital/list-all-Hospitals",
       type: "GET",
@@ -21,10 +27,22 @@ $(document).ready(function () {
           response.data.forEach((h) => {
             hospitalFilter.append(`<option value="${h.id}">${h.name}</option>`);
           });
+
+          // Preselect hospital if coming from hospitals page
+          if (preselectId) {
+            hospitalFilter.val(preselectId);
+            fetchAdmins(preselectId);
+          } else {
+            fetchAdmins(); // default all admins
+          }
+        } else {
+          hospitalFilter.html(`<option value="">No hospitals found</option>`);
+          adminsTableBody.html(`<tr><td colspan="4" class="no-data">No admins found.</td></tr>`);
         }
       },
       error: function (xhr) {
         console.error("Error fetching hospitals:", xhr.responseText);
+        hospitalFilter.html(`<option value="">Error loading hospitals</option>`);
       },
     });
   }
@@ -67,14 +85,7 @@ $(document).ready(function () {
     const selectedHospital = $(this).val();
     fetchAdmins(selectedHospital);
   });
-  $(document).ready(function () {
-  $("#backBtn").on("click", function () {
-    window.location.href = "dashboard.html";
-  });
-});
-
 
   // ✅ Initial Load
-  fetchHospitals();
-  fetchAdmins();
+  fetchHospitals(selectedHospitalId);
 });

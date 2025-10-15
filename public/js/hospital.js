@@ -65,17 +65,17 @@ $(document).ready(function () {
       // Navigation buttons
       card.find(".doctors-btn").click(function (e) {
         e.stopPropagation();
-        redirectTo("doctors.html", hospital.id);
+        redirectTo("doctor.html", hospital.id);
       });
 
       card.find(".patients-btn").click(function (e) {
         e.stopPropagation();
-        redirectTo("patients.html", hospital.id);
+        redirectTo("patient.html", hospital.id);
       });
 
       card.find(".admins-btn").click(function (e) {
         e.stopPropagation();
-        redirectTo("admins.html", hospital.id);
+        redirectTo("admin.html", hospital.id);
       });
 
       card.find(".appointments-btn").click(function (e) {

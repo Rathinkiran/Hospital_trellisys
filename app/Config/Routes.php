@@ -28,9 +28,7 @@ $routes->group("hospital" ,["namespace" => "namespace App\Controllers" , "filter
 $routes->group("api" , ["namespace" => "App\Controllers", "filter" => "Auth" ] , function($routes){
     // Routes for Admin
     $routes->group('', ['filter' => 'roleAdmin'], function ($routes) {
-        $routes->post('add-Doctors', [AdminController::class, 'addDoctor']);
-        $routes->delete('Delete-Doctor', [AdminController::class, 'deleteDoctors']);
-        $routes->post('Edit-Doctor', [AdminController::class, 'editDoctors']);
+        
     });
 
     // Routes for doctor + admin , tat sol
@@ -42,6 +40,9 @@ $routes->group("api" , ["namespace" => "App\Controllers", "filter" => "Auth" ] ,
     });
 
     // Routes for all authenticated users
+    $routes->post('add-Doctors', [AdminController::class, 'addDoctor']);
+        $routes->delete('Delete-Doctor', [AdminController::class, 'deleteDoctors']);
+        $routes->post('Edit-Doctor', [AdminController::class, 'editDoctors']);
     $routes->post('add-Admins', [AdminController::class, 'addAdmin']);
     $routes->post('add-Hospital', [AdminController::class, 'addHospital']);
     $routes->post('Edit-Patient', [AdminController::class, 'editPatient']);

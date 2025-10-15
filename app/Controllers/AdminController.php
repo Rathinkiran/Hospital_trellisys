@@ -186,16 +186,12 @@ class AdminController extends ResourceController
                 ]);
             }
 
-
-       $hospital_id = $this->request->hospital_id;
-
+     $hospital_id = $this->request->getVar("hospital_id");
+       
 
        if(!$hospital_id)
        {
-        return $this->respond([
-            "status" => false,
-            "Mssge" => "Admin doesn't have hospital_id"
-        ]);
+       $hospital_id = $this->request->hospital_id;
        }
 
        $name = $this->request->getVar("name");
@@ -752,8 +748,6 @@ class AdminController extends ResourceController
             ]);
         }
     }
-
-
 
     public function deletePatient()
     {

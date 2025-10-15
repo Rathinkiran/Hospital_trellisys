@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add Doctor - ABC Hospital</title>
+<title>Add Doctor - Hospital Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
@@ -30,6 +30,7 @@ button#backBtn { background:#e53e3e; color:white; margin-right:10px; }
 button#backBtn:hover { background:#c53030; }
 .error { color: var(--error); margin-top:5px; font-size:0.9rem; }
 .flex-row { display:flex; justify-content:flex-start; gap:10px; }
+#hospitalSelectContainer { display:none; }
 </style>
 </head>
 <body>
@@ -37,6 +38,15 @@ button#backBtn:hover { background:#c53030; }
 <div class="container">
   <h1>Add Doctor</h1>
   <form id="addDoctorForm">
+    
+    <!-- Hospital selection only for SuperAdmins -->
+    <div id="hospitalSelectContainer">
+      <label for="hospitalSelect">Select Hospital *</label>
+      <select id="hospitalSelect">
+        <option value="">Select Hospital</option>
+      </select>
+    </div>
+
     <label for="name">Name *</label>
     <input type="text" id="name" required>
 
@@ -67,18 +77,47 @@ button#backBtn:hover { background:#c53030; }
 <script>
 $(document).ready(function(){
     const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role"); // 0=Admin, 1=Doctor, 2=Patient, 3=SuperAdmin
+
     if(!token){
         alert("Please login first");
         window.location.href = "index.html";
         return;
     }
 
-    // Back button
+    // 🏥 Show hospital select only for SuperAdmins
+    if(role === "3") {
+        $("#hospitalSelectContainer").show();
+        loadHospitals();
+    }
+
+    // 🔙 Back button
     $("#backBtn").click(function(){
-        window.location.href = "http://localhost:8080/dashboard.html";
+        window.location.href = "dashboard.html";
     });
 
-    // Submit form
+    // 🏥 Load hospitals for SuperAdmin
+    function loadHospitals() {
+        $.ajax({
+            url: "http://localhost:8080/hospital/list-all-Hospitals",
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+            success: function(res){
+                if(res.status && res.data.length > 0){
+                    res.data.forEach(h => {
+                        $("#hospitalSelect").append(`<option value="${h.id}">${h.name}</option>`);
+                    });
+                } else {
+                    $("#hospitalSelect").append(`<option value="">No hospitals found</option>`);
+                }
+            },
+            error: function(){
+                $("#hospitalSelect").append(`<option value="">Error fetching hospitals</option>`);
+            }
+        });
+    }
+
+    // ➕ Submit form
     $("#addDoctorForm").on("submit", function(e){
         e.preventDefault();
         $("#formError").text("");
@@ -89,6 +128,16 @@ $(document).ready(function(){
         const gender = $("#gender").val();
         const expertise = $("#expertise").val().trim();
 
+        let hospital_id = null;
+
+        if(role === "3") {
+            hospital_id = $("#hospitalSelect").val();
+            if(!hospital_id) {
+                $("#formError").text("Please select a hospital.");
+                return;
+            }
+        }
+
         if(!name || !email || !password || !gender || !expertise){
             $("#formError").text("All fields are required.");
             return;
@@ -98,11 +147,11 @@ $(document).ready(function(){
             url: "http://localhost:8080/api/add-Doctors",
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
-            data: { name, email, password, gender, expertise },
+            data: { name, email, password, gender, expertise, hospital_id },
             success: function(res){
                 if(res.status){
                     alert(res.mssge || "Doctor added successfully!");
-                    window.location.href = "doctor.html"; // redirect to listing
+                    window.location.href = "doctor.html";
                 } else {
                     $("#formError").text(res.mssge || "Failed to add doctor");
                 }
