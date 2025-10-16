@@ -68,6 +68,7 @@ $routes->group("appointment" , ["namespace" => "App\Controllers" , "filter" => "
       $routes->post('complete-Appointment' , [AppointmentController::class , 'completeAppointment']);     
     });
 
+    //Need to add filter for SuperAdmin and Admin and then add these to that
     $routes->post('confirm-Appointment' , [AppointmentController::class , 'confirmAppointment']); 
     $routes->get('List-appointments-for-Doctors-and-Admins', [AppointmentController::class, 'ListAppointmentforDoctorsandAdmins']);
     $routes->get('List-appointments-for-Patients', [AppointmentController::class, 'ListAppointmentforPatients']);
