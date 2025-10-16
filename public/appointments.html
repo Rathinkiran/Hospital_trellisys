@@ -22,11 +22,13 @@
     .btn-reschedule { background:#ffc107; color:black; }
     .btn-cancel { background:#dc3545; color:white; }
     .btn-history { background:#6f42c1; color:white; }
+    .btn-confirm { background:#007bff; color:white; }
     .status { padding:4px 8px; border-radius:12px; font-size:12px; font-weight:bold; display:inline-block; }
     .status.booked { background:#cce5ff; color:#004085; }
     .status.rescheduled { background:#fff3cd; color:#856404; }
     .status.completed { background:#d4edda; color:#155724; }
     .status.cancelled { background:#f8d7da; color:#721c24; }
+    .status.pending { background:#ffeeba; color:#856404; }
     .inactive-status { 
       padding:4px 8px; 
       border-radius:4px; 
@@ -34,8 +36,26 @@
       background-color:#6c757d; 
       color:white;
     }
-    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; }
-    .modal-content { background:white; padding:20px; border-radius:6px; width:400px; }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100vh;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 6px;
+      width: 400px;
+      max-width: 90%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      position: relative;
+    }
     .modal-content h3 { margin-top:0; }
     .modal-content label { display:block; margin:10px 0 5px; }
     .modal-content input, .modal-content select, .modal-content textarea { width:100%; padding:6px; border:1px solid #ccc; border-radius:4px; }
@@ -57,6 +77,7 @@
         <select id="filterStatus">
           <option value="">All Status</option>
           <option value="booked">Booked</option>
+          <option value="pending">Pending</option>
           <option value="rescheduled">Rescheduled</option>
           <option value="completed">Completed</option>
           <option value="cancelled">Cancelled</option>
@@ -67,7 +88,6 @@
           <option value="this_week">This Week</option>
           <option value="last_month">Last Month</option>
         </select>
-        <!-- Hospital filter (visible for Patient & SuperAdmin) -->
         <select id="filterHospital" style="display:none;">
           <option value="">All Hospitals</option>
         </select>
@@ -101,6 +121,19 @@
         <textarea id="rescheduleReason" required></textarea>
         <button type="submit" class="btn-reschedule">Reschedule</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Confirm / Cancel Modal -->
+  <div class="modal" id="actionModal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="$('#actionModal').hide()">&times;</span>
+      <h3 id="actionModalTitle"></h3>
+      <p><strong>Appointment ID:</strong> <span id="modalAppointmentId"></span></p>
+      <p><strong>Date:</strong> <span id="modalAppointmentDate"></span></p>
+      <p><strong>Start Time:</strong> <span id="modalAppointmentStart"></span></p>
+      <p><strong>End Time:</strong> <span id="modalAppointmentEnd"></span></p>
+      <button id="confirmActionBtn" class="btn-confirm"></button>
     </div>
   </div>
 </body>

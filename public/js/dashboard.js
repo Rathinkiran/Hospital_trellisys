@@ -94,6 +94,7 @@ $(document).ready(function () {
     doc.save(`Appointment_${item.appointment_id}.pdf`);
 }
 
+
     // ---------- PATIENT VIEWING MODE ----------
     function setupPatientViewingMode() {
         $("#viewingPatientHeader").show();
@@ -114,6 +115,7 @@ $(document).ready(function () {
             window.location.reload();
         });
     }
+
 
     // ---------- ADMIN/DOCTOR STATS ----------
     function loadAdminStats() {

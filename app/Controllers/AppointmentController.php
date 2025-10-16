@@ -25,14 +25,13 @@ class AppointmentController extends ResourceController
   //    return $dateTime->format('H:i:s');
   // }
 
-   public function __construct()
-   {
-     $this->db = db_connect();
-     $this->appointmentModel = new AppointmentModel();
-     $this->userModel = new UserModel();
-     $this->visitRecords = new VisitRecordsModel();
-   }
-
+public function __construct()
+{
+    $this->db = db_connect();
+    $this->appointmentModel = new AppointmentModel();
+    $this->userModel = new UserModel();
+    $this->visitRecords = new VisitRecordsModel();
+}
 
 public function ListAppointmentforDoctorsandAdmins()
 {
@@ -617,187 +616,187 @@ public function ListAppointmentHospitalWise()
     }
 }
 
-  public function BookAppointment()
-  {
-        try{
-        $validationRules = [
-            "doctorId" => [
-            "rules" => "required"
-            ],
-            "appointment_date" => [
-            "rules" => "required|valid_date[Y-m-d]",  // YYYY-MM-DD
-            ],
-            "appointment_startTime" => [
-            "rules" => "required|valid_date[h:i A]",  // HH:MM AM/PM format
-            ],
-        ];
-        
-
-        if(!$this->validate($validationRules))
-        {
-            return $this->respond([
-            "status" => false,
-            "error" => $this->validator->getErrors(),
-            ]);
-        }
-
-        
-        $userData = $this->request->userData;
-
-        $user = $this->userModel->find($userData->user->id);
-
-        $role = $user['role'];
-        $patientName = $user['name'];
-        $patientNumber = $user['phone_no'] ?? null;
+public function BookAppointment()
+{
+    try{
+    $validationRules = [
+        "doctorId" => [
+        "rules" => "required"
+        ],
+        "appointment_date" => [
+        "rules" => "required|valid_date[Y-m-d]",  // YYYY-MM-DD
+        ],
+        "appointment_startTime" => [
+        "rules" => "required|valid_date[h:i A]",  // HH:MM AM/PM format
+        ],
+    ];
     
-        
-        $patientId = $user['id'];
-        
 
-            if($role != "2")
-            {
-            return $this->respond([
-                "status" => false,
-                "mssge" => "Only Patients can book the appointment",
-            ]);
-            }
-            
-            $doctorId = $this->request->getVar("doctorId");
-            $hospital_id = $this->request->getVar("hospital_id");
-            $doctorDetails = $this->userModel->where("id" , $doctorId)->get()->getRow();
-            $doctorName = $doctorDetails->name;
-            $doctorRole = $doctorDetails->role;
+    if(!$this->validate($validationRules))
+    {
+        return $this->respond([
+        "status" => false,
+        "error" => $this->validator->getErrors(),
+        ]);
+    }
 
+    
+    $userData = $this->request->userData;
 
-            if($doctorRole != "1")
-            {
-            return $this->respond([
-                "status" => false,
-                "mssge" => "Appointment can be booked with oly Doctor",
-            ]);
-            }
+    $user = $this->userModel->find($userData->user->id);
 
+    $role = $user['role'];
+    $patientName = $user['name'];
+    $patientNumber = $user['phone_no'] ?? null;
 
-            $appointment_date = $this->request->getVar("appointment_date"); // YYYY-MM-DD format
-            $startTime = $this->request->getVar("appointment_startTime"); // HH:MM AM/PM
+    
+    $patientId = $user['id'];
+    
 
-        
-            $appointment_startTime = convertToDatabaseTime($startTime); // HH:MM:SS format
-            $appointment_endTime = addHoursToTime($appointment_startTime); // HH:MM:SS format
-
-
-            //checking whether the appointment date/time is in the future
-            $validationResult = validateFutureAppointment($appointment_date, $appointment_startTime);
-
-            if (!$validationResult['status']) {
-                return $this->respond([
-                    "status" => false,
-                    "Error"  => $validationResult['message']  
-                ]);
-            }
-            
-
-            $conflictingAppointment = $this->appointmentModel->where("doctor_id" , $doctorId)
-                                                                ->where("Appointment_date" , $appointment_date)
-                                                                ->groupStart()
-                                                                    ->groupStart()
-                                                                        ->where("Appointment_startTime <=" , $appointment_startTime)
-                                                                        ->where("Appointment_endTime >" , $appointment_endTime)
-                                                                    ->groupEnd()
-                                                                    ->orGroupStart()
-                                                                        ->where("Appointment_startTime <" , $appointment_endTime)
-                                                                        ->where("Appointment_endTime >=" , $appointment_endTime)
-                                                                    ->groupEnd()
-                                                                    ->orGroupStart()
-                                                                        ->where("Appointment_startTime >=", $appointment_startTime)
-                                                                        ->where("Appointment_endTime <=", $appointment_endTime)
-                                                                    ->groupEnd()
-                                                                ->groupEnd()
-                                                                ->first();
-
-
-        if ($conflictingAppointment) {
-            return $this->respond([
-                "status" => false,
-                "error" => "Doctor already has a conflicting appointment at this time slot."
-            ]);
-            }                                                              
-
-
-            //          if($alreadyExistingAppointment)
-            //          {
-            //            foreach($alreadyExistingAppointment as $appointment)
-            //            {
-            //               $existingStart = $appointment['Appointment_startTime'];
-            //               $existingEnd = $appointment['Appointment_endTime'];
-
-            //         // 1. New start time is between existing start and end time
-            //         // 2. New end time is between existing start and end time  
-            //         // 3. New appointment completely surrounds existing appointment
-                    
-            //         if (
-            //             ($appointment_startTime >= $existingStart && $appointment_startTime < $existingEnd) ||
-            //             ($appointment_endTime > $existingStart && $appointment_endTime <= $existingEnd) ||
-            //             ($appointment_startTime <= $existingStart && $appointment_endTime >= $existingEnd)
-            //         ) {
-            //             $hasConflict = true;
-            //             break; // No need to check further if we found one conflict
-            //         }
-            //     }
-            //   if ($hasConflict) {
-            //         return $this->respond([
-            //             "status" => false,
-            //             "error" => "Doctor already has a conflicting appointment at this time slot. Please choose a different time."
-            //         ]);
-            //     }
-            // }
-            
-            
-        
-            $data = [
-            "doctor_id" => $doctorId,
-            "patient_id" => $patientId,
-            "Appointment_date" => $appointment_date,
-            "Appointment_startTime" => $appointment_startTime,
-            "Appointment_endTime" => $appointment_endTime,
-            "hospital_id" => $hospital_id
-            ];
-
-
-            $result = $this->appointmentModel->insert($data);
-
-
-        if($result)
+        if($role != "2")
         {
-        // $formattedDateTime = date("Y-m-d g:i A", strtotime($appointment_date . " " . $appointment_startTime));
-
-            return $this->respond([
-                "status" => true,
-                "mssge"  => "Booked appointment successfully with " . $doctorName,
-                "appointment" => [
-                    "doctor_id" => $doctorId,
-                    "doctorName" => $doctorName,
-                    "patient_id" => $patientId,
-                    "patientName" => $patientName,
-                    "patientNumber" => $patientNumber,
-                    "date"   => $appointment_date,   
-                    "time" => $startTime
-                ],
-                "Result" => $result
-            ]);
-            }
-
-            
+        return $this->respond([
+            "status" => false,
+            "mssge" => "Only Patients can book the appointment",
+        ]);
+        }
         
-        }catch(\Exception $e)
+        $doctorId = $this->request->getVar("doctorId");
+        $hospital_id = $this->request->getVar("hospital_id");
+        $doctorDetails = $this->userModel->where("id" , $doctorId)->get()->getRow();
+        $doctorName = $doctorDetails->name;
+        $doctorRole = $doctorDetails->role;
+
+
+        if($doctorRole != "1")
         {
+        return $this->respond([
+            "status" => false,
+            "mssge" => "Appointment can be booked with oly Doctor",
+        ]);
+        }
+
+
+        $appointment_date = $this->request->getVar("appointment_date"); // YYYY-MM-DD format
+        $startTime = $this->request->getVar("appointment_startTime"); // HH:MM AM/PM
+
+    
+        $appointment_startTime = convertToDatabaseTime($startTime); // HH:MM:SS format
+        $appointment_endTime = addHoursToTime($appointment_startTime); // HH:MM:SS format
+
+
+        //checking whether the appointment date/time is in the future
+        $validationResult = validateFutureAppointment($appointment_date, $appointment_startTime);
+
+        if (!$validationResult['status']) {
             return $this->respond([
                 "status" => false,
-                "Error" => $e->getMessage(),
+                "Error"  => $validationResult['message']  
             ]);
         }
         
-  }
+
+        $conflictingAppointment = $this->appointmentModel->where("doctor_id" , $doctorId)
+                                                            ->where("Appointment_date" , $appointment_date)
+                                                            ->groupStart()
+                                                                ->groupStart()
+                                                                    ->where("Appointment_startTime <=" , $appointment_startTime)
+                                                                    ->where("Appointment_endTime >" , $appointment_endTime)
+                                                                ->groupEnd()
+                                                                ->orGroupStart()
+                                                                    ->where("Appointment_startTime <" , $appointment_endTime)
+                                                                    ->where("Appointment_endTime >=" , $appointment_endTime)
+                                                                ->groupEnd()
+                                                                ->orGroupStart()
+                                                                    ->where("Appointment_startTime >=", $appointment_startTime)
+                                                                    ->where("Appointment_endTime <=", $appointment_endTime)
+                                                                ->groupEnd()
+                                                            ->groupEnd()
+                                                            ->first();
+
+
+    if ($conflictingAppointment) {
+        return $this->respond([
+            "status" => false,
+            "error" => "Doctor already has a conflicting appointment at this time slot."
+        ]);
+        }                                                              
+
+
+        //          if($alreadyExistingAppointment)
+        //          {
+        //            foreach($alreadyExistingAppointment as $appointment)
+        //            {
+        //               $existingStart = $appointment['Appointment_startTime'];
+        //               $existingEnd = $appointment['Appointment_endTime'];
+
+        //         // 1. New start time is between existing start and end time
+        //         // 2. New end time is between existing start and end time  
+        //         // 3. New appointment completely surrounds existing appointment
+                
+        //         if (
+        //             ($appointment_startTime >= $existingStart && $appointment_startTime < $existingEnd) ||
+        //             ($appointment_endTime > $existingStart && $appointment_endTime <= $existingEnd) ||
+        //             ($appointment_startTime <= $existingStart && $appointment_endTime >= $existingEnd)
+        //         ) {
+        //             $hasConflict = true;
+        //             break; // No need to check further if we found one conflict
+        //         }
+        //     }
+        //   if ($hasConflict) {
+        //         return $this->respond([
+        //             "status" => false,
+        //             "error" => "Doctor already has a conflicting appointment at this time slot. Please choose a different time."
+        //         ]);
+        //     }
+        // }
+        
+        
+    
+        $data = [
+        "doctor_id" => $doctorId,
+        "patient_id" => $patientId,
+        "Appointment_date" => $appointment_date,
+        "Appointment_startTime" => $appointment_startTime,
+        "Appointment_endTime" => $appointment_endTime,
+        "hospital_id" => $hospital_id
+        ];
+
+
+        $result = $this->appointmentModel->insert($data);
+
+
+    if($result)
+    {
+    // $formattedDateTime = date("Y-m-d g:i A", strtotime($appointment_date . " " . $appointment_startTime));
+
+        return $this->respond([
+            "status" => true,
+            "mssge"  => "Booked appointment successfully with " . $doctorName,
+            "appointment" => [
+                "doctor_id" => $doctorId,
+                "doctorName" => $doctorName,
+                "patient_id" => $patientId,
+                "patientName" => $patientName,
+                "patientNumber" => $patientNumber,
+                "date"   => $appointment_date,   
+                "time" => $startTime
+            ],
+            "Result" => $result
+        ]);
+        }
+
+        
+    
+    }catch(\Exception $e)
+    {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage(),
+        ]);
+    }
+    
+}
 
 public function rescheduleAppointment()
 {
@@ -976,6 +975,180 @@ public function rescheduleAppointment()
   
 }
 
+public function completeAppointment()
+{
+    try{
+         $userData = $this->request->userData;
+
+         $userDetails = $this->userModel->find($userData->user->id);
+         $userRole = $userDetails['role'];
+
+         if($userRole !== '1')
+         {
+            return $this->respond([
+                "status" => false,
+                "Error_Mssge" => "Oly doctors can complete the appointment"
+            ]);
+         }
+
+
+        $validationRules = [
+            "appointment_id" => [
+                "rules" => "required",
+            ],
+            "reason" => [
+                "rules" => "required",
+            ],
+            "weight" => [
+                "rules" => "required",
+            ],
+            "bp_systolic" => [
+                "rules" => "required",
+            ],
+            "bp_diastolic" => [
+                "rules" => "required",
+            ],
+            "doctor_comment" => [
+                "rules" => "required",
+            ],
+        ];
+
+        
+        if(!$this->validate($validationRules))
+            {
+                return $this->respond([
+                    "status" => false,
+                    "Mssge" => "All fields are required",
+                    "Error" => $this->validator->getErrors(),
+                ]);
+            }
+
+     
+
+       $appointmentId = $this->request->getVar("appointment_id");
+
+       $reason = $this->request->getVar("reason");
+       $weight = $this->request->getVar("weight");
+       $bp_systolic = $this->request->getVar("bp_systolic");
+       $bp_diastolic = $this->request->getVar("bp_diastolic");
+       $doctor_comment = $this->request->getVar("doctor_comment");
+    
+
+       $appointmentDetails = $this->appointmentModel->find($appointmentId);
+          
+       
+
+
+
+        if(!$appointmentDetails || !isset($appointmentDetails['status']) || $appointmentDetails['status'] != "booked") {
+            return $this->respond([
+                "status" => false,
+                "Mssge" => "Appointment doesn't exist or maybe it has already been completed/rescheduled",
+            ]);
+        }
+
+
+       $patient_id = $appointmentDetails['patient_id'];
+       $doctor_id = $appointmentDetails['doctor_id'];
+       $hospital_id = $appointmentDetails['hospital_id'];
+
+
+       $data = [
+        "appointment_id" => $appointmentId,
+        "patient_id" => $patient_id,
+        "doctor_id" => $doctor_id,
+        "reason" => $reason,
+        "weight" => $weight,
+        "bp_systolic" => $bp_systolic,
+        "bp_diastolic" => $bp_diastolic,
+        "doctor_comment" => $doctor_comment,
+        "hospital_id" => $hospital_id
+       ];
+
+       //Starting the transaction
+       $this->db->transStart();
+       $this->appointmentModel
+        ->where('id', $appointmentId)
+        ->set('status', 'completed')
+        ->update();
+
+        
+        
+       $this->visitRecords->insert($data);
+       $this->db->transComplete();
+       //Ending the transaction
+
+       if ($this->db->transStatus() === false) {
+            return $this->respond([
+                "status" => false,
+                "Mssge"  => "Transaction failed"
+            ]);
+        }
+
+       return $this->respond([
+            "status" => true,
+            "Mssge" => "Successfully changed the status of appointment to completed and added the details into visit_records",
+        ]);
+       
+    }
+    catch(\Exception $e)
+    {
+       return $this->respond([
+        "status" => false,
+        "Error" => $e->getMessage()
+       ]);
+    }
+}
+
+public function confirmAppointment()
+{
+    try {
+      $userData = $this->request->userData;
+      $userRole = $this->request->role;
+
+      if($userRole == "2")
+      {
+        return $this->respond([
+            "status" =>false,
+            "Mssge" => "Patients can't confirm the appointment"
+        ]);
+      }
+
+      $appointment_id = $this->request->getVar("appointment_id");
+
+      $appointmentDetails = $this->appointmentModel->find($appointment_id);
+     
+
+      if($appointmentDetails['status'] !== "pending")
+      {
+        return $this->respond([
+            "status" => false,
+            "Mssge" => "Oly appointmemts with status Pending can be confirmed"
+        ]);
+      }
+
+      $result = $this->appointmentModel->where("id" , $appointment_id)
+                                       ->set("status" , "booked")
+                                       ->update();
+
+     if($result)
+     {
+        $updatedAppointment = $this->appointmentModel->find($appointment_id);
+        return $this->respond([
+            "status" => true,
+            "Mssge" => "Successfully booked the appointment , i.e changed the status from pending to booked",
+            "result" => $result,
+            "data" => $updatedAppointment
+        ]);
+     }
+    }catch(\Exception $e)
+    {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage()
+        ]);
+    }
+}
 
 public function ExportAppointmentsCSV()
 {
@@ -1111,133 +1284,6 @@ public function ExportAppointmentsCSV()
         ]);
     }
 }
-
-
-public function completeAppointment()
-{
-    try{
-         $userData = $this->request->userData;
-
-         $userDetails = $this->userModel->find($userData->user->id);
-         $userRole = $userDetails['role'];
-
-         if($userRole !== '1')
-         {
-            return $this->respond([
-                "status" => false,
-                "Error_Mssge" => "Oly doctors can complete the appointment"
-            ]);
-         }
-
-
-        $validationRules = [
-            "appointment_id" => [
-                "rules" => "required",
-            ],
-            "reason" => [
-                "rules" => "required",
-            ],
-            "weight" => [
-                "rules" => "required",
-            ],
-            "bp_systolic" => [
-                "rules" => "required",
-            ],
-            "bp_diastolic" => [
-                "rules" => "required",
-            ],
-            "doctor_comment" => [
-                "rules" => "required",
-            ],
-        ];
-
-        
-        if(!$this->validate($validationRules))
-            {
-                return $this->respond([
-                    "status" => false,
-                    "Mssge" => "All fields are required",
-                    "Error" => $this->validator->getErrors(),
-                ]);
-            }
-
-     
-
-       $appointmentId = $this->request->getVar("appointment_id");
-
-       $reason = $this->request->getVar("reason");
-       $weight = $this->request->getVar("weight");
-       $bp_systolic = $this->request->getVar("bp_systolic");
-       $bp_diastolic = $this->request->getVar("bp_diastolic");
-       $doctor_comment = $this->request->getVar("doctor_comment");
-    
-
-       $appointmentDetails = $this->appointmentModel->find($appointmentId);
-          
-       
-
-
-
-        if(!$appointmentDetails || !isset($appointmentDetails['status']) || $appointmentDetails['status'] != "booked") {
-            return $this->respond([
-                "status" => false,
-                "Mssge" => "Appointment doesn't exist or maybe it has already been completed/rescheduled",
-            ]);
-        }
-
-
-       $patient_id = $appointmentDetails['patient_id'];
-       $doctor_id = $appointmentDetails['doctor_id'];
-       $hospital_id = $appointmentDetails['hospital_id'];
-
-
-       $data = [
-        "appointment_id" => $appointmentId,
-        "patient_id" => $patient_id,
-        "doctor_id" => $doctor_id,
-        "reason" => $reason,
-        "weight" => $weight,
-        "bp_systolic" => $bp_systolic,
-        "bp_diastolic" => $bp_diastolic,
-        "doctor_comment" => $doctor_comment,
-        "hospital_id" => $hospital_id
-       ];
-
-       //Starting the transaction
-       $this->db->transStart();
-       $this->appointmentModel
-        ->where('id', $appointmentId)
-        ->set('status', 'completed')
-        ->update();
-
-        
-        
-       $this->visitRecords->insert($data);
-       $this->db->transComplete();
-       //Ending the transaction
-
-       if ($this->db->transStatus() === false) {
-            return $this->respond([
-                "status" => false,
-                "Mssge"  => "Transaction failed"
-            ]);
-        }
-
-       return $this->respond([
-            "status" => true,
-            "Mssge" => "Successfully changed the status of appointment to completed and added the details into visit_records",
-        ]);
-       
-    }
-    catch(\Exception $e)
-    {
-       return $this->respond([
-        "status" => false,
-        "Error" => $e->getMessage()
-       ]);
-    }
-}
-
 
 
 public function showHistory()
@@ -1390,7 +1436,7 @@ public function cancelAppointment()
     //   print_r($appointmentDetails);
     //   die;
 
-      if($appointmentDetails['status'] != 'booked')
+      if($appointmentDetails['status'] != 'booked' && $appointmentDetails['status'] != 'pending')
       {
         return $this->respond([
             "status" => false,
