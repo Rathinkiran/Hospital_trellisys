@@ -17,6 +17,8 @@ use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
 use App\Filters\JWTAuthFilter;
 use App\Filters\PatientFilter;
+use App\Filters\SuperAdminAndAdminFilter;
+use App\Filters\SuperAdminFilter;
 
 class Filters extends BaseFilters
 {
@@ -43,7 +45,9 @@ class Filters extends BaseFilters
         'roleAdmin'     => AdminFilter::class,
         'roleDoctor'    => DoctorFilter::class,
         'role_Doctor_and_Admin' => DoctorAndAdminFilter::class,
-        'rolePatient'   => PatientFilter::class
+        'rolePatient'   => PatientFilter::class,
+        'roleSuperAdmin' => SuperAdminFilter::class,
+        'role_SuperAdmin_and_Admin' => SuperAdminAndAdminFilter::class
     ];
 
     /**
