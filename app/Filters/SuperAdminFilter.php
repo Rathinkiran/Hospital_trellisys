@@ -6,12 +6,8 @@ use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Config\Services;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 
-
-
-class JWTAuthFilter implements FilterInterface
+class SuperAdminFilter implements FilterInterface
 {
     /**
      * Do whatever processing this filter needs to do.
@@ -30,46 +26,24 @@ class JWTAuthFilter implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
-        $AuthorizationHeader = $request->getServer("HTTP_AUTHORIZATION");
+        try{
+         $userRole = $request->role;
 
-        if(!$AuthorizationHeader)
+        if($userRole != "3")
+        {
+            return Services::response()->setStatusCode(403)->setJSON([
+                "status" =>false,
+                "error" => "Access denied , Only SuperAdmin can access"
+            ]);
+        }
+        }catch(\Exception $e)
         {
             return Services::response()->setStatusCode(403)->setJSON([
                 "status" => false,
-                "mssge" => "Login to proceed further",
+                "error" => $e->getMessage()
             ]);
         }
-
-        $AuthorizationStringArr = explode(' ', $AuthorizationHeader);
-
-        if((count($AuthorizationStringArr) !== 2) || ($AuthorizationStringArr[0] != "Bearer"))
-        {
-           return Services::response()->setStatusCode(403)->setJSON([
-            "status" => false,
-            "mssge" => "Unathorized Access , Invalid token or Expired"
-           ]);
-        }
-
-        try{
-          
-            $decoded = JWT::decode($AuthorizationStringArr[1] , new Key(getenv('JWT_KEY') , 'HS256'));
-
-            $request->jwtToken = $AuthorizationStringArr[1];
-            $request->userData = $decoded;
-            $request->role = $decoded->user->role;
-            $request->id = $decoded->user->id;
-            if(isset($decoded->user->hospital_id)) 
-            {
-               $request->hospital_id = $decoded->user->hospital_id;
-            }
-        }catch(\Exception $e)
-        {
-            return Services::response()->setStatusCode(500)->setJSON([
-                "status" => false,
-                "mssge" => "Failed to validate the token",
-                "error" => $e->getMessage(),
-            ]);
-        }
+        
     }
 
     /**

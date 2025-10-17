@@ -6,354 +6,625 @@ use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\UserModel;
 use App\Models\AppointmentModel;
+use App\Models\HospitalsModel;
 use Exception;
 
 class AdminController extends ResourceController
 {
     private $userModel;
     private $appointmentModel;
+    private $hospitalModel;
+    private $db;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
         $this->appointmentModel = new AppointmentModel();
+        $this->hospitalModel = new HospitalsModel();
+        $this->db = db_connect();
     }
 
+public function addAdmin()
+{
+    try{
+    $validationRules = [
+        "name" => [
+            "rules" => "required"
+        ],
+        "email" => [
+            "rules" => "required"
+        ],
+        "password" => [
+            "rules" => "required"
+        ],
+        "phone_no" => [
+            "rules" => "required"
+        ],
+    ];
 
-    public function addDoctor()
+    if(!$this->validate($validationRules))
     {
-         
+        return $this->respond([
+            "status" => false,
+            "Mssge" => $this->validator->getErrors()
+        ]);
+    }
+
+        $userRole = $this->request->role;
+
+        if($userRole !== "3")
+        {
+        return $this->respond([
+            "status" => false,
+            "Mssge" => "Oly SuperAdmins can add Admins"
+        ]);
+        }
+
+        $name = $this->request->getVar("name");
+        $email = $this->request->getVar("email");
+        $password = $this->request->getVar("password");
+        $hospital_id = $this->request->getVar("hospital_id");
+        $phone_no = $this->request->getVar("phone_no");
+        $gender = $this->request->getVar("gender");
+        
+
+        $data = [
+        "name" => $name,
+        "email" => $email,
+        "password" => $password,
+        "hospital_id" => $hospital_id,
+        "gender" => $gender,
+        "phone_no" => $phone_no,
+        "role" => "0"
+        ];
+        
+    //  print_r($data);
+    //  die;
+        $result = $this->userModel->insert($data);
+
+        if($result)
+        {
+        return $this->respond([
+            "status" => true,
+            "Mssge" => "Successfully Added Admin"
+        ]);
+        }
+
+
+    }catch(\Exception $e)
+    {
+    return $this->respond([
+        "status" => false,
+        "Error" => $e->getMessage()
+    ]);
+    }
+}
+
+public function addHospital()
+{
+    try {
         $validationRules = [
         "name" => [
             "rules" => "required"
         ],
-         "gender" => [
+        "address" => [
             "rules" => "required"
         ],
-         "expertise" => [
+        "contact_no" => [
             "rules" => "required"
         ],
-        "email" => [
-            "rules" => "required|min_length[3]|valid_email"
-        ],
-        "password" => [
-            "rules" => "required|min_length[3]|"
+        "code" => [
+            "rules" => "required"
         ]
-     ];
+        ];
 
-     if(!$this->validate($validationRules))
-     {
-        return $this->respond([
-            "status" => false,
-            "mssge" => "Fields are required",
-            "Error" => $this->validator->getErrors(),
-        ]);
-     }
 
-       $name = $this->request->getVar("name");
-       $email = $this->request->getVar("email");
-       $password = $this->request->getVar("password");
-       $gender = $this->request->getVar("gender");
-       $role = "1";
-       $expertise = $this->request->getVar("expertise");
+        if(!$this->validate($validationRules))
+        {
+            return $this->respond([
+                "status" => false,
+                "Mssge" => $this->validator->getErrors()
+            ]);
+        }
 
-       $data = [
-        "name" => $name,
-        "email" => $email,
-        "password" => $password,
-        "gender" => $gender,
-        "role" => $role,
-        "expertise" => $expertise
-       ];
+        $name = $this->request->getVar("name");
+        $address = $this->request->getVar("address");
+        $contact_no = $this->request->getVar("contact_no");
+        $code = $this->request->getVar("code");
 
-    //    print_r($data);
-    //    exit;
+        $data = [
+            "name" => $name,
+            "address" => $address,
+            "contact_no" => $contact_no,
+            "code" => $code
+        ];
 
-       $result = $this->userModel->insert($data);
+        $result = $this->hospitalModel->insert($data);
 
-       if(!$result)
-       {
-         return $this->respond([
-            "status" => false,
-            "mssge" => "Could not insert Doctors data",
-        ]);
-       }
-
-       return $this->respond([
-        "status" => true,
-        "mssge" => "Successfully inserted data",
-        "result" => $result
-       ]);
-    
-    }
-
-    public function addPatient()
-    {        
-        $validationRules = [
-                "name" => [
-                    "rules" => "required"
-                ],
-                "gender" => [
-                    "rules" => "required"
-                ],
-                "problem" => [
-                    "rules" => "required"
-                ],
-                "email" => [
-                    "rules" => "required|min_length[3]|valid_email"
-                ],
-                "password" => [
-                    "rules" => "required|min_length[3]|"
-                ]
-            ];
-
-            if(!$this->validate($validationRules))
-            {
-                return $this->respond([
-                    "status" => false,
-                    "mssge" => "Fields are required",
-                    "Error" => $this->validator->getErrors(),
-                ]);
-            }
-
-            $name = $this->request->getVar("name");
-            $email = $this->request->getVar("email");
-            $password = $this->request->getVar("password");
-            $gender = $this->request->getVar("gender");
-            $role = "2";
-            $problem = $this->request->getVar("problem");
-
-            $data = [
-                "name" => $name,
-                "email" => $email,
-                "password" => $password,
-                "gender" => $gender,
-                "role" => $role,
-                "problem" => $problem
-            ];
-
-            //    print_r($data);
-            //    exit;
-
-            $result = $this->userModel->insert($data);
-
-            if(!$result)
-            {
-                return $this->respond([
-                    "status" => false,
-                    "mssge" => "Could not insert Doctors data",
-                ]);
-            }
-
+        if($result)
+        {
             return $this->respond([
                 "status" => true,
-                "mssge" => "Successfully inserted data",
-                "result" => $result
-            ]);
-    }
-
-    public function ListDoctors()
-    {
-        //Shld do some checks
-
-        $data = $this->userModel->where("role" , "1")->findAll(); // role : 0 => oly list Doctors
-
-        if($data)
-        {
-            return $this->respond([
-            "status" => true,
-            "mssge" => "Fetched all the doctors data successfully",
-            "data" => $data,
-            ]);
-        }else{
-             return $this->respond([
-            "status" => false,
-            "mssge" => "Could not fetch the data"
+                "Mssge" => "Successfully added the hospital"
             ]);
         }
+    }catch(\Exception $e)
+    {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage()
+        ]);
+    }
+}
+
+public function addDoctor()
+{ 
+            $validationRules = [
+            "name" => [
+                "rules" => "required"
+            ],
+            "gender" => [
+                "rules" => "required"
+            ],
+            "expertise" => [
+                "rules" => "required"
+            ],
+            "email" => [
+                "rules" => "required|min_length[3]|valid_email"
+            ],
+            "password" => [
+                "rules" => "required|min_length[3]|"
+            ]
+        ];
+
+        if(!$this->validate($validationRules))
+        {
+            return $this->respond([
+                "status" => false,
+                "mssge" => "Fields are required",
+                "Error" => $this->validator->getErrors(),
+            ]);
+        }
+
+    $hospital_id = $this->request->getVar("hospital_id");
+    
+
+    if(!$hospital_id)
+    {
+    $hospital_id = $this->request->hospital_id;
+    }
+
+    $name = $this->request->getVar("name");
+    $email = $this->request->getVar("email");
+    $password = $this->request->getVar("password");
+    $gender = $this->request->getVar("gender");
+    $role = "1";
+    $expertise = $this->request->getVar("expertise");
+
+
+    $data = [
+    "name" => $name,
+    "email" => $email,
+    "password" => $password,
+    "gender" => $gender,
+    "role" => $role,
+    "expertise" => $expertise,
+    "hospital_id" => $hospital_id
+    ];
+
+        //    print_r($data);
+        //    exit;
+
+    $result = $this->userModel->insert($data);
+
+    if(!$result)
+    {
+        return $this->respond([
+        "status" => false,
+        "mssge" => "Could not insert Doctors data",
+    ]);
+    }
+
+    return $this->respond([
+    "status" => true,
+    "mssge" => "Successfully inserted data",
+    "result" => $result
+    ]);
+
+}
+
+public function addPatient()
+{        
+    $validationRules = [
+            "name" => [
+                "rules" => "required"
+            ],
+            "gender" => [
+                "rules" => "required"
+            ],
+            "problem" => [
+                "rules" => "required"
+            ],
+            "email" => [
+                "rules" => "required|min_length[3]|valid_email"
+            ],
+            "password" => [
+                "rules" => "required|min_length[3]|"
+            ]
+        ];
+
+        if(!$this->validate($validationRules))
+        {
+            return $this->respond([
+                "status" => false,
+                "mssge" => "Fields are required",
+                "Error" => $this->validator->getErrors(),
+            ]);
+        }
+
+        $name = $this->request->getVar("name");
+        $email = $this->request->getVar("email");
+        $password = $this->request->getVar("password");
+        $gender = $this->request->getVar("gender");
+        $role = "2";
+        $problem = $this->request->getVar("problem");
+
+        $data = [
+            "name" => $name,
+            "email" => $email,
+            "password" => $password,
+            "gender" => $gender,
+            "role" => $role,
+            "problem" => $problem
+        ];
+
+        //    print_r($data);
+        //    exit;
+
+        $result = $this->userModel->insert($data);
+
+        if(!$result)
+        {
+            return $this->respond([
+                "status" => false,
+                "mssge" => "Could not insert Doctors data",
+            ]);
+        }
+
+        return $this->respond([
+            "status" => true,
+            "mssge" => "Successfully inserted data",
+            "result" => $result
+        ]);
+}
+
+public function ListAdmins()
+{
+    try{
+    $hospital_id = $this->request->getVar("hospital_id");
+
+    $builder = $this->userModel->select("users.* , hospital.name as HospitalName")
+                                ->where("users.role" , "0")
+                                ->join("hospitals as hospital" , "hospital.id = users.hospital_id")
+                                ->where("users.isDeleted" , "0");
+    //hospital wise Filter
+    if(!empty($hospital_id))
+    {
+        $builder = $builder->where("users.hospital_id" , $hospital_id);
+    }
+
+    $data = $builder->findAll();
+
+    return $this->respond([
+        "status" => true,
+        "Mssge" => "Successfully fetched the Admins list",
+        "data" => $data
+    ]);
+    }catch(\Exception $e)
+    {
+    return $this->respond([
+        "status" => false,
+        "Error" => $e->getMessage()
+    ]);
+    }
+}
+
+public function ListAdminsHospitalWise()
+{
+    try{
+    $hospital_id = $this->request->getVar("hospital_id");
+
+    $builder = $this->userModel->select("users.* , hospital.name as HospitalName")
+                                ->where("users.role" , "0")
+                                ->join("hospitals as hospital" , "hospital.id = users.hospital_id")
+                                ->where("users.isDeleted" , "0");
+    
+        $builder = $builder->where("users.hospital_id" , $hospital_id);
+    
+
+    $data = $builder->findAll();
+
+    return $this->respond([
+        "status" => true,
+        "Mssge" => "Successfully fetched the Admins list",
+        "data" => $data
+    ]);
+    }catch(\Exception $e)
+    {
+    return $this->respond([
+        "status" => false,
+        "Error" => $e->getMessage()
+    ]);
+    }
+}
+
+
+public function ListDoctors()
+{
+    $data = $this->userModel->where("role" , "1")->findAll();
+
+    
+    if($data)
+    {
+        return $this->respond([
+        "status" => true,
+        "mssge" => "Fetched all the doctors data successfully",
+        "data" => $data,
+        ]);
+    }else{
+            return $this->respond([
+        "status" => false,
+        "mssge" => "Could not fetch the data"
+        ]);
+    }
+
+
+}
+
+public function ListDoctorsforSuperAdmins()
+{
+    $hospital_id = $this->request->getVar("hospital_id");
+
+    $builder = $this->userModel
+                    ->select("users.* , hospital.name as HospitalName")
+                    ->where("users.role" , "1")
+                    ->join("hospitals as hospital" , "hospital.id = users.hospital_id" , "left")
+                    ->where("users.isDeleted" , "0");
+
+    //hospital filter
+    if(!empty($hospital_id))
+    {
+        $builder = $builder->where("users.hospital_id" , $hospital_id);
+                            
+    }
+    
+    $data = $builder->findAll();
+
+    if($data)
+    {
+        return $this->respond([
+        "status" => true,
+        "mssge" => "Fetched all the doctors data successfully",
+        "data" => $data,
+        ]);
+    }else{
+            return $this->respond([
+        "status" => false,
+        "mssge" => "Could not fetch the data"
+        ]);
+    }
+
+
+}
+
+public function ListDoctorsHospitalwise()
+{
+    //Shld do some checks
+    $userRole = $this->request->role;
+    $hospital_id = $this->request->getVar("hospital_id");
+    //for Admin - using hospital_id from his token
+    
+
+    if(!$hospital_id)
+    {
+        //for SuperAdmin
+        $hospital_id = $this->request->hospital_id; 
         
     }
 
+    // $data = $this->userModel->where("role" , "1")
+    //                         ->where("hospital_id" , $hospital_id)
+    //                         ->findAll(); // role : 0 => oly list Doctors
+        $data = $this->userModel->select("users.*,
+                                        hospital.name as HospitalName")
+                                ->where("role" , "1")
+                                ->where("hospital_id" , $hospital_id)
+                                ->where("users.isDeleted" , "0")
+                                ->join("hospitals as hospital" , "hospital.id=users.hospital_id" , "left")
+                                ->findAll();
 
-
-    public function ListPatients()
+    if($data)
     {
-        //Shld do some checks
-
-        $data = $this->userModel->where("role" , "2")->findAll(); // role : 0 => oly list Doctors
-
-
-        if($data)
-        {
+        return $this->respond([
+        "status" => true,
+        "mssge" => "Fetched all the doctors data successfully",
+        "data" => $data,
+        ]);
+    }else{
             return $this->respond([
-            "status" => true,
-            "mssge" => "Fetched all the Patients data successfully",
-            "data" => $data,
-            ]);
-        }else{
-             return $this->respond([
+        "status" => false,
+        "mssge" => "Could not fetch the data"
+        ]);
+    }
+    
+}
+
+public function ListPatientsHospitalWise()
+{
+    try{
+    //Shld do some checks
+    $hospital_id = $this->request->hospital_id;
+
+
+    if(!$hospital_id)
+    {
+        $hospital_id = $this->request->getVar("hospital_id");
+    }
+    
+
+    $data = $this->appointmentModel->select("appointments.patient_id,
+                                                users.*")
+                                    ->where("appointments.hospital_id" , $hospital_id)
+                                    ->join("users as users" , "users.id=appointments.patient_id")
+                                    ->groupBy("users.id")
+                                    ->findAll(); // role : 0 => oly list Doctors
+
+
+    if($data)
+    {
+        return $this->respond([
+        "status" => true,
+        "mssge" => "Fetched all the Patients data successfully",
+        "data" => $data,
+        ]);
+    }else{
+            return $this->respond([
+        "status" => false,
+        "mssge" => "Could not fetch the data"
+        ]);
+    }
+    }
+    catch(\Exception $e)
+    {
+        return $this->respond(([
             "status" => false,
-            "mssge" => "Could not fetch the data"
-            ]);
-        }
+            "Error" => $e->getMessage()
+        ]));
+    }
+    
+    
+}
+
+public function ListPatients()
+{
+    //Shld do some checks
+
+    $data = $this->userModel->where("role" , "2")
+                            ->where("isDeleted","0")
+                            ->findAll(); // role : 0 => oly list Doctors
+
+
+    if($data)
+    {
+        return $this->respond([
+        "status" => true,
+        "mssge" => "Fetched all the Patients data successfully",
+        "data" => $data,
+        ]);
+    }else{
+            return $this->respond([
+        "status" => false,
+        "mssge" => "Could not fetch the data"
+        ]);
+    }
+    
+}
+
+public function ListPatientsforSuperAdmin()
+{
+    //Shld do some checks
+    try{
         
+    $hospital_id = $this->request->getVar("hospital_id");
+
+    $builder = $this->userModel
+                    ->select("users.*")
+                    ->where("users.role" , "2")
+                    ->where("users.isDeleted" , "0"); // role : 0 => oly list Doctors
+
+    if(!empty($hospital_id))
+    {
+        $builder = $builder
+                    ->join("appointments" , "appointments.patient_id = users.id" , "inner")
+                    ->where("appointments.hospital_id" , $hospital_id)
+                    ->groupBy("users.id");
     }
 
+    $data = $builder->findAll();
 
-    public function editDoctors()
+
+    if($data)
     {
-
-       try{
-        //    $userData = $this->request->userData;
-
-        //     $user = $this->userModel->find($userData->user->id); 
-
-        //     $userRole = $user['role'];
-
-
-                $id = $this->request->getVar("doctorId"); 
-                
-                $Doctordata = $this->userModel->where("id" , $id)->first();
-
-                $name = $this->request->getVar("name") ?? $Doctordata["name"];
-                $role = $this->request->getVar("role") ?? $Doctordata["role"];
-                $gender = $this->request->getVar("gender") ?? $Doctordata["gender"];
-                $expertise = $this->request->getVar("expertise") ?? $Doctordata["expertise"];
-                $email = $this->request->getVar("email") ?? $Doctordata["email"];
-
-
-                $data = [
-                    "id" => $id,
-                    "name" => $name,
-                    "email" => $email,
-                    "role" => $role,
-                    "gender" => $gender,
-                    "expertise" => $expertise
-                ];
-
-                $result = $this->userModel->update($id , $data);
-
-                if($result)
-                {
-                    return $this->respond([
-                        "status" => true,
-                        "mssge" => "updated Successfully",
-                        "result" => $result
-                    ]);
-                }else{
-                    
-                    return $this->respond([
-                        "status" => true,
-                        "mssge" => "Failed to update the Doctors data",
-                        "result" => $result
-                    ]);
-                }
-                
-            }catch(\Exception $e)
-            {
-                return $this->respond([
-                    "status" => false,
-                    "Error" => $e->getMessage(),
-                ]);
-            }
-       
+        return $this->respond([
+        "status" => true,
+        "mssge" => "Fetched all the Patients data successfully",
+        "data" => $data,
+        ]);
+    }else{
+            return $this->respond([
+        "status" => false,
+        "mssge" => "Could not fetch the data"
+        ]);
+    }
+    }catch(\Exception $e)
+    {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage()
+        ]);
     }
 
-    public function deleteDoctors()
-    {
-       try{
-        //    $userData = $this->request->userData;
+    
+}
 
-        //     $user = $this->userModel->find($userData->user->id); 
+public function editDoctors()
+{
+    try{
+    //    $userData = $this->request->userData;
 
-        //     $userRole = $user['role'];
+    //     $user = $this->userModel->find($userData->user->id); 
 
-                $validationRules = [
-                    "doctorId" => [
-                        "rules" => "required"
-                    ]
-                ];
+    //     $userRole = $user['role'];
 
 
-                if(!$this->validate($validationRules))
-                {
-                    return $this->respond([
-                        "status" => false,
-                        "Error" => $this->validator->getErrors(),
-                    ]);
-                }
-
-                $id = $this->request->getVar("doctorId"); 
-
-                // print_r($id);
-                // exit;
-                
-                $result = $this->userModel->where("id" , $id)->delete();
-
-                if($result)
-                {
-                    return $this->respond([
-                        "status" => true,
-                        "mssge" => "Deleted data of DoctorId " . $id ." Successfully",
-                        "result" => $result
-                    ]);
-                }else{
-                    
-                    return $this->respond([
-                        "status" => true,
-                        "mssge" => "Failed to Delete the Doctors data",
-                        "result" => $result
-                    ]);
-                }
-               
-            }catch(\Exception $e)
-            {
-                return $this->respond([
-                    "status" => false,
-                    "Error" => $e->getMessage(),
-                ]);
-            }
-    }
-
-    public function EditPatient()
-    {
-        try{
-           
-            $id = $this->request->getVar("patientId"); 
-
-            $PatientData = $this->userModel->where("id" , $id)->first();
-            $name = $this->request->getVar("name") ?? $PatientData["name"];
-            $role = $this->request->getVar("role") ?? $PatientData["role"];
-            $gender = $this->request->getVar("gender") ?? $PatientData["gender"];
-            $problem = $this->request->getVar("problem") ?? $PatientData["problem"];
-            $email = $this->request->getVar("email") ?? $PatientData['email'];
-
+            $id = $this->request->getVar("doctorId"); 
             
+            $Doctordata = $this->userModel->where("id" , $id)
+                                            ->where("isDeleted" , "0")
+                                            ->first();
+
+            $name = $this->request->getVar("name") ?? $Doctordata["name"];
+            $role = $this->request->getVar("role") ?? $Doctordata["role"];
+            $gender = $this->request->getVar("gender") ?? $Doctordata["gender"];
+            $expertise = $this->request->getVar("expertise") ?? $Doctordata["expertise"];
+            $email = $this->request->getVar("email") ?? $Doctordata["email"];
+            $phone_no = $this->request->getVar("phone_no") ?? $Doctordata["phone_no"];
+
+
             $data = [
                 "id" => $id,
                 "name" => $name,
-                "role" => $role,
                 "email" => $email,
+                "role" => $role,
                 "gender" => $gender,
-                "problem" => $problem,
+                "expertise" => $expertise,
+                "phone_no" => $phone_no
             ];
 
-
             $result = $this->userModel->update($id , $data);
-
 
             if($result)
             {
                 return $this->respond([
                     "status" => true,
-                    "mssge" => "Edited Patient data Successfully",
+                    "mssge" => "updated Successfully",
                     "result" => $result
                 ]);
             }else{
                 
                 return $this->respond([
                     "status" => true,
-                    "mssge" => "Failed to Edit  the Patients data",
+                    "mssge" => "Failed to update the Doctors data",
                     "result" => $result
                 ]);
             }
@@ -365,19 +636,23 @@ class AdminController extends ResourceController
                 "Error" => $e->getMessage(),
             ]);
         }
-    }
+    
+}
 
+public function deleteDoctors()
+{
+    try{
+    //    $userData = $this->request->userData;
 
+    //     $user = $this->userModel->find($userData->user->id); 
 
-    public function deletePatient()
-    {
-       try{
-          
-        $validationRules = [
-            "patientId" => [
-            "rules" => "required"
-                    ]
-                ];
+    //     $userRole = $user['role'];
+
+            $validationRules = [
+                "doctorId" => [
+                    "rules" => "required"
+                ]
+            ];
 
 
             if(!$this->validate($validationRules))
@@ -388,28 +663,30 @@ class AdminController extends ResourceController
                 ]);
             }
 
+            $id = $this->request->getVar("doctorId"); 
 
-            $id = $this->request->getVar("patientId"); 
-
+            // print_r($id);
+            // die;
             
-            $result = $this->userModel->where("id" , $id)->delete();
-                
+            $result = $this->userModel->where("id" , $id)
+                                        ->set(['isDeleted' => 1])
+                                        ->update();
 
             if($result)
             {
                 return $this->respond([
                     "status" => true,
-                    "mssge" => "Deleted data of PatientId " . $id . " Successfully",
+                    "mssge" => "Deleted data of DoctorId " . $id ." Successfully",
                     "result" => $result
                 ]);
             }else{
                 
                 return $this->respond([
                     "status" => true,
-                    "mssge" => "Failed to Delete the Patients data",
+                    "mssge" => "Failed to Delete the Doctors data",
+                    "result" => $result
                 ]);
             }
-            
             
         }catch(\Exception $e)
         {
@@ -418,13 +695,123 @@ class AdminController extends ResourceController
                 "Error" => $e->getMessage(),
             ]);
         }
-    }
-  
+}
 
-    public function getUser($userId = null)
+
+public function EditPatient()
+{
+    try{
+        
+        $id = $this->request->getVar("patientId"); 
+
+        $PatientData = $this->userModel->where("id" , $id)
+                                        ->where("isDeleted" , "0")
+                                        ->first();
+        $name = $this->request->getVar("name") ?? $PatientData["name"];
+        $role = $this->request->getVar("role") ?? $PatientData["role"];
+        $gender = $this->request->getVar("gender") ?? $PatientData["gender"];
+        $problem = $this->request->getVar("problem") ?? $PatientData["problem"];
+        $email = $this->request->getVar("email") ?? $PatientData['email'];
+
+        
+        $data = [
+            "id" => $id,
+            "name" => $name,
+            "role" => $role,
+            "email" => $email,
+            "gender" => $gender,
+            "problem" => $problem,
+        ];
+
+
+        $result = $this->userModel->update($id , $data);
+
+
+        if($result)
+        {
+            return $this->respond([
+                "status" => true,
+                "mssge" => "Edited Patient data Successfully",
+                "result" => $result
+            ]);
+        }else{
+            
+            return $this->respond([
+                "status" => true,
+                "mssge" => "Failed to Edit  the Patients data",
+                "result" => $result
+            ]);
+        }
+        
+    }catch(\Exception $e)
     {
-      try {
-         if (!$userId) {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage(),
+        ]);
+    }
+}
+
+public function deletePatient()
+{
+    try{
+        
+    $validationRules = [
+        "patientId" =>
+            [
+            "rules" => "required"
+            ]
+        ];
+
+
+        if(!$this->validate($validationRules))
+        {
+            return $this->respond([
+                "status" => false,
+                "Error" => $this->validator->getErrors(),
+            ]);
+        }
+
+
+        $id = $this->request->getVar("patientId"); 
+
+        
+        $result = $this->userModel->where("id" , $id)
+                                    ->set(["isDeleted" => 1])
+                                    ->update();
+                                    
+            
+
+        if($result)
+        {
+            return $this->respond([
+                "status" => true,
+                "mssge" => "Deleted data of PatientId " . $id . " Successfully",
+                "result" => $result
+            ]);
+        }else{
+            
+            return $this->respond([
+                "status" => true,
+                "mssge" => "Failed to Delete the Patients data",
+            ]);
+        }
+        
+        
+    }catch(\Exception $e)
+    {
+        return $this->respond([
+            "status" => false,
+            "Error" => $e->getMessage(),
+        ]);
+    }
+}
+
+
+public function getUser($userId = null)
+{ // for editing his own profile
+    try {
+        if (!$userId) {
             $userId = $this->request->getVar('userId');
         }
         
@@ -453,6 +840,7 @@ class AdminController extends ResourceController
         ]);
     }
 }
+
 
 public function updateProfile()
 {
@@ -531,20 +919,60 @@ public function updateProfile()
 public function stats()
 {
     try{
+        $userRole = $this->request->role;
+        if($userRole == '3')
+        {
+            $doctorsCount = $this->userModel->where('role' , '1')
+                                            ->where('isDeleted' , '0')
+                                            ->countAllResults();
+            $patientsCount = $this->userModel->where('role' , '2')
+                                             ->where('isDeleted' , '0')
+                                             ->countAllResults();
+            $hospitalsCount = $this->hospitalModel->countAllResults();
+
+            $appointmentsCount = $this->appointmentModel->where('status' , 'booked')->countAllResults();
 
 
-        $doctorsCount = $this->userModel->where('role' , '1')->countAllResults();
-        $patientsCount = $this->userModel->where('role' , '2')->countAllResults();
+            return $this->respond([
+                'doctors' => $doctorsCount,
+                'patients' => $patientsCount,
+                'appointments' => $appointmentsCount,
+                'hospitals'    => $hospitalsCount
+            ]);
 
-        $appointmentsCount = $this->appointmentModel->where('status' , 'booked')->countAllResults();
+        }
 
 
-         return $this->respond([
-            'doctors' => $doctorsCount,
-            'patients' => $patientsCount,
-            'appointments' => $appointmentsCount
-        ]);
+        $hospital_id = $this->request->hospital_id;
+        $doctorsCount = $this->userModel->where('role' , '1')
+                                        ->where('isDeleted' , '0')
+                                        ->where('hospital_id' , $hospital_id)
+                                        ->countAllResults();
 
+        
+
+        $query = $this->db->table('appointments')
+            ->select('COUNT(DISTINCT patient_id) AS total_patients')
+            ->where('hospital_id', $hospital_id)
+            ->get()
+            ->getRow();
+
+        $patientsCount = (int) $query->total_patients;
+
+
+        $appointmentsCount = $this->appointmentModel->where('status' , 'booked')
+                                                    ->where('hospital_id' , $hospital_id)
+                                                    ->countAllResults();
+
+
+            return $this->respond([
+                'doctors' => $doctorsCount,
+                'patients' => $patientsCount,
+                'appointments' => $appointmentsCount
+            ]);
+
+
+        
     }catch(\Exception $e)
     {
         return $this->respond([
@@ -554,6 +982,8 @@ public function stats()
     }
 }
 
+
+// For - displaying patient profile in top left corner
 public function getDetailsforPatient()
 {
     try{
@@ -579,7 +1009,7 @@ public function getDetailsforPatient()
 
        return $this->respond([
         "status" => true,
-        "Mssge" => "Successfully fetched Basic Details",
+        "Mssge" => "Successfully fetched all the Basic Details",
         "data" => $data,
        ]);
     }
@@ -591,4 +1021,6 @@ public function getDetailsforPatient()
        ]);
     }
 }
+
+
 }

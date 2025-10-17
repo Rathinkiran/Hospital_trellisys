@@ -1,12 +1,19 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Patients - ABC Hospital</title>
+<title>Patients - Hospital Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #f7faff;
+  margin: 0;
+  padding: 0;
+}
+
 /* Container */
 .container {
   max-width: 900px;
@@ -17,12 +24,37 @@
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
+/* Animated Welcome Header */
+.hospital-header {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 600;
+  color: #2a6bc9;
+  margin-bottom: 15px;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 3px solid #2a6bc9;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  animation: typing 3s steps(30, end), blink .75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+@keyframes blink {
+  from, to { border-color: transparent }
+  50% { border-color: #2a6bc9; }
+}
+
 /* Header */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .flex-row { display:flex; gap:10px; }
@@ -39,6 +71,21 @@
 
 .btn-back { background:#e53e3e; color:white; }
 .btn-back:hover { background:#c53030; }
+
+/* Filter Row */
+.filter-row {
+  display: none; /* only for SuperAdmin */
+  margin-bottom: 15px;
+}
+.filter-row label {
+  font-weight: 500;
+  margin-right: 10px;
+}
+.filter-row select {
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
 
 /* Table */
 .table { width: 100%; border-collapse: collapse; }
@@ -71,12 +118,22 @@
 <body>
 
 <div class="container">
+  <div id="hospitalHeader" class="hospital-header"></div>
+
   <div class="header">
     <h1>Patients List</h1>
     <div class="flex-row">
       <button id="backBtn" class="btn-primary btn-back">Back</button>
       <button id="addPatientBtn" class="btn-primary">Add Patient</button>
     </div>
+  </div>
+
+  <!-- Hospital Filter (only for SuperAdmin) -->
+  <div class="filter-row" id="hospitalFilterRow">
+    <label for="filterHospital">Filter by Hospital:</label>
+    <select id="filterHospital">
+      <option value="">All Hospitals</option>
+    </select>
   </div>
 
   <div class="table-responsive">

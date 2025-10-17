@@ -25,7 +25,8 @@ class VisitRecordsModel extends Model
         "updated_at",
         "deleted_at",
         "deleted_by",
-        "isDeleted"
+        "isDeleted",
+        "hospital_id"
     ];
 
     protected bool $allowEmptyInserts = false;

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Admin - SuperAdmin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f5f7fb;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 700px;
+      background: #fff;
+      margin: 60px auto;
+      padding: 35px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #2a6bc9;
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-top: 15px;
+      color: #333;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 25px;
+    }
+
+    .btn-primary {
+      background-color: #2a6bc9;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-primary:hover {
+      background-color: #1a56b4;
+    }
+
+    .btn-secondary {
+      background-color: #e53e3e;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-secondary:hover {
+      background-color: #c53030;
+    }
+
+    .error-msg {
+      color: #e53e3e;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .success-msg {
+      color: #38a169;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Add Admin</h1>
+    <form id="addAdminForm">
+      <label for="name">Admin Name</label>
+      <input type="text" id="name" placeholder="Enter admin name" required />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="Enter admin email" required />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter password" required />
+
+      <label for="phone_no">Phone Number</label>
+      <input type="text" id="phone_no" placeholder="Enter phone number" required />
+
+      <label for="gender">Gender</label>
+      <select id="gender" required>
+        <option value="">-- Select Gender --</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+
+      <label for="hospital_id">Hospital</label>
+      <select id="hospital_id" required>
+        <option value="">-- Select Hospital --</option>
+      </select>
+
+      <div class="btn-row">
+        <button type="button" id="backBtn" class="btn-secondary">Back</button>
+        <button type="submit" class="btn-primary">Add Admin</button>
+      </div>
+    </form>
+
+    <div id="message"></div>
+  </div>
+
+  <script src="js/addAdmin.js"></script>
+</body>
+</html>
